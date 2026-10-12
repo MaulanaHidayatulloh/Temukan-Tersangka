@@ -63,8 +63,12 @@ export default function DetailKasus({ kembali, mulai, lihatHasil }) {
           <div className="daftar-tersangka">
             {kasus.tersangka.map((orang, index) => (
               <article className="tersangka" key={orang.inisial}>
-                <div className={`avatar avatar-${orang.warna}`}>
-                  {orang.inisial}
+                <div className={`avatar avatar-foto avatar-${orang.warna}`}>
+                  <img
+                    src={orang.foto}
+                    alt={`Foto ${orang.nama}`}
+                    loading="lazy"
+                  />
                 </div>
                 <div className="tersangka-info">
                   <h3>{orang.nama}</h3>

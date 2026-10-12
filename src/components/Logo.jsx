@@ -2,7 +2,7 @@ export default function Logo({ kecil = false }) {
   return (
     <a
       className={`logo ${kecil ? "logo-kecil" : ""}`}
-      href="#beranda"
+      href="/"
       aria-label="TemukanTersangka — Beranda"
     >
       <span className="logo-simbol">

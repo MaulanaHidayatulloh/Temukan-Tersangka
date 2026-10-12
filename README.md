@@ -23,7 +23,7 @@ Game misteri interaktif berbasis React + Vite dengan backend Node.js yang menghu
 
    ```env
    GEMINI_API_KEY=API_KEY_MILIKMU
-   GEMINI_MODEL=gemini-2.5-flash
+   GEMINI_MODEL=gemini-3.8-flash
    API_PORT=3001
    ```
 

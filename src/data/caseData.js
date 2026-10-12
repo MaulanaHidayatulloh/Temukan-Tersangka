@@ -70,6 +70,7 @@ export const kasus = {
       nama: "Victoria Blackwood",
       peran: "Istri korban",
       inisial: "VB",
+      foto: "https://randomuser.me/api/portraits/women/44.jpg",
       deskripsi:
         "Mengaku berada di sayap timur kediaman saat kejadian. Hubungannya dengan korban belakangan dikabarkan memburuk.",
       warna: "merah",
@@ -78,6 +79,7 @@ export const kasus = {
       nama: "Edward Hayes",
       peran: "Mitra bisnis",
       inisial: "EH",
+      foto: "https://randomuser.me/api/portraits/men/32.jpg",
       deskripsi:
         "Bersikeras telah meninggalkan kediaman sebelum tengah malam. Ia memiliki kepentingan bisnis bersama korban.",
       warna: "emas",
@@ -86,6 +88,7 @@ export const kasus = {
       nama: "Arthur Wells",
       peran: "Kepala pelayan",
       inisial: "AW",
+      foto: "https://randomuser.me/api/portraits/men/75.jpg",
       deskripsi:
         "Orang terakhir yang mengaku menyajikan minuman untuk korban. Ia telah bekerja di kediaman itu selama bertahun-tahun.",
       warna: "abu",
@@ -147,6 +150,7 @@ export const wawancaraTersangka = [
     nama: "Victoria Blackwood",
     peran: "Istri korban",
     inisial: "VB",
+    foto: "https://randomuser.me/api/portraits/women/44.jpg",
     warna: "merah",
     alibi: "Mengaku berada di sayap timur kediaman sejak pukul 22.45.",
     pernyataan:
@@ -158,6 +162,7 @@ export const wawancaraTersangka = [
     nama: "Edward Hayes",
     peran: "Mitra bisnis",
     inisial: "EH",
+    foto: "https://randomuser.me/api/portraits/men/32.jpg",
     warna: "emas",
     alibi: "Mengaku meninggalkan kediaman sebelum pukul 23.00.",
     pernyataan:
@@ -169,6 +174,7 @@ export const wawancaraTersangka = [
     nama: "Arthur Wells",
     peran: "Kepala pelayan",
     inisial: "AW",
+    foto: "https://randomuser.me/api/portraits/men/75.jpg",
     warna: "abu",
     alibi: "Mengaku selesai melayani minuman lalu kembali ke ruang servis.",
     pernyataan:

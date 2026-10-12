@@ -10,11 +10,13 @@ import {
   Eye,
   UserRound,
 } from "lucide-react";
-import { kasus } from "../data/caseData.js";
+import { kasus, bacaProgresTersimpan } from "../data/caseData.js";
 import IlustrasiKasus from "./IlustrasiKasus.jsx";
 import Logo from "./Logo";
 
 export default function Beranda({ bukaKasus }) {
+  const kasusSelesai = bacaProgresTersimpan().hasilTuduhan === "benar";
+
   return (
     <>
       <section className="hero" id="beranda">
@@ -86,16 +88,32 @@ export default function Beranda({ bukaKasus }) {
           <div className="kartu-nomor">
             <span>BERKAS NO.</span>
             <strong>MM—001</strong>
-            <div className="kartu-cap">
-              BELUM
-              <br />
-              TERPECAHKAN
+            <div
+              className={`kartu-cap ${kasusSelesai ? "kartu-cap-selesai" : ""}`}
+            >
+              {kasusSelesai ? (
+                <>
+                  BERHASIL
+                  <br />
+                  TERPECAHKAN
+                </>
+              ) : (
+                <>
+                  BELUM
+                  <br />
+                  TERPECAHKAN
+                </>
+              )}
             </div>
           </div>
           <div className="kartu-isi">
             <div className="kartu-label">
-              <span className="status-merah">
-                <span /> KASUS TERBUKA
+              <span
+                className={
+                  kasusSelesai ? "status-selesai-arsip" : "status-merah"
+                }
+              >
+                <span /> {kasusSelesai ? "KASUS TERPECAHKAN" : "KASUS TERBUKA"}
               </span>
               <span className="tingkat-kesulitan">MENENGAH</span>
             </div>

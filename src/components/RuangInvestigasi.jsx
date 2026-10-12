@@ -20,6 +20,7 @@ import {
   Sparkles,
   LoaderCircle,
 } from "lucide-react";
+import MarkdownText from "./MarkdownText.jsx";
 import {
   KUNCI_PROGRES,
   KUNCI_REKOR,
@@ -551,8 +552,14 @@ export default function RuangInvestigasi({ kembali, selesai }) {
                       className={`pilihan-tersangka-item ${tersangkaDipilih === index ? "aktif" : ""}`}
                       onClick={() => setTersangkaDipilih(index)}
                     >
-                      <span className={`avatar avatar-${orang.warna}`}>
-                        {orang.inisial}
+                      <span
+                        className={`avatar avatar-foto avatar-${orang.warna}`}
+                      >
+                        <img
+                          src={orang.foto}
+                          alt={`Foto ${orang.nama}`}
+                          loading="lazy"
+                        />
                       </span>
                       <span>
                         <strong>{orang.nama}</strong>
@@ -565,9 +572,13 @@ export default function RuangInvestigasi({ kembali, selesai }) {
                 <article className="kartu-interogasi">
                   <span className="label-panel">TRANSKRIP PERNYATAAN</span>
                   <div
-                    className={`avatar avatar-besar avatar-${wawancaraTersangka[tersangkaDipilih].warna}`}
+                    className={`avatar avatar-foto avatar-besar avatar-${wawancaraTersangka[tersangkaDipilih].warna}`}
                   >
-                    {wawancaraTersangka[tersangkaDipilih].inisial}
+                    <img
+                      src={wawancaraTersangka[tersangkaDipilih].foto}
+                      alt={`Foto ${wawancaraTersangka[tersangkaDipilih].nama}`}
+                      loading="lazy"
+                    />
                   </div>
                   <h3>{wawancaraTersangka[tersangkaDipilih].nama}</h3>
                   <span className="peran-tersangka">
@@ -637,78 +648,77 @@ export default function RuangInvestigasi({ kembali, selesai }) {
                       );
                     })}
                   </div>
-                  <div className="interogasi-ai">
-                    <div className="subjudul-interogasi">
-                      <Bot size={17} />
-                      <span>
-                        <strong>INTEROGASI BEBAS DENGAN AI</strong>
-                        <small>
-                          Tanyakan apa pun kepada tersangka ini. Jawaban dibuat
-                          Gemini berdasarkan skenario dan bukti yang sudah kamu
-                          temukan.
-                        </small>
-                      </span>
-                    </div>
-                    <div className="riwayat-chat-ai" aria-live="polite">
-                      {(riwayatAI[String(tersangkaDipilih)] || []).length ===
-                        0 && (
-                        <p className="chat-ai-kosong">
-                          Belum ada pertanyaan bebas. Coba tanyakan tentang
-                          alibi, motif, atau hubungan tersangka dengan barang
-                          bukti.
-                        </p>
-                      )}
-                      {(riwayatAI[String(tersangkaDipilih)] || []).map(
-                        (pesan, index) => (
-                          <div
-                            className={`pesan-ai ${pesan.role === "user" ? "pesan-ai-pengguna" : "pesan-ai-model"}`}
-                            key={`${pesan.role}-${index}`}
-                          >
-                            <span>
-                              {pesan.role === "user"
-                                ? "KAMU"
-                                : wawancaraTersangka[
-                                    tersangkaDipilih
-                                  ].nama.toUpperCase()}
-                            </span>
-                            <p>{pesan.text}</p>
-                          </div>
-                        ),
-                      )}
-                      {memuatAI && (
-                        <div className="status-ai-memuat">
-                          <LoaderCircle size={15} className="ikon-berputar" />{" "}
-                          Gemini sedang menyusun jawaban...
-                        </div>
-                      )}
-                    </div>
-                    <form
-                      className="form-interogasi-ai"
-                      onSubmit={kirimInterogasiAI}
-                    >
-                      <textarea
-                        value={inputAI}
-                        onChange={(event) => setInputAI(event.target.value)}
-                        placeholder={`Tanyakan sesuatu kepada ${wawancaraTersangka[tersangkaDipilih].nama}...`}
-                        rows={2}
-                        maxLength={1200}
-                        disabled={memuatAI}
-                      />
-                      <button
-                        className="tombol tombol-emas"
-                        type="submit"
-                        disabled={!inputAI.trim() || memuatAI}
-                      >
-                        <Send size={15} /> Kirim
-                      </button>
-                    </form>
-                    {errorAI && (
-                      <p className="pesan-error-ai" role="alert">
-                        {errorAI}
+                </article>
+                <div className="interogasi-ai interogasi-ai-sidebar">
+                  <div className="subjudul-interogasi">
+                    <Bot size={17} />
+                    <span>
+                      <strong>INTEROGASI BEBAS DENGAN AI</strong>
+                      <small>
+                        Tanyakan apa pun kepada tersangka ini. Jawaban dibuat
+                        Gemini berdasarkan skenario dan bukti yang sudah kamu
+                        temukan.
+                      </small>
+                    </span>
+                  </div>
+                  <div className="riwayat-chat-ai" aria-live="polite">
+                    {(riwayatAI[String(tersangkaDipilih)] || []).length ===
+                      0 && (
+                      <p className="chat-ai-kosong">
+                        Belum ada pertanyaan bebas. Coba tanyakan tentang alibi,
+                        motif, atau hubungan tersangka dengan barang bukti.
                       </p>
                     )}
+                    {(riwayatAI[String(tersangkaDipilih)] || []).map(
+                      (pesan, index) => (
+                        <div
+                          className={`pesan-ai ${pesan.role === "user" ? "pesan-ai-pengguna" : "pesan-ai-model"}`}
+                          key={`${pesan.role}-${index}`}
+                        >
+                          <span>
+                            {pesan.role === "user"
+                              ? "KAMU"
+                              : wawancaraTersangka[
+                                  tersangkaDipilih
+                                ].nama.toUpperCase()}
+                          </span>
+                          <MarkdownText>{pesan.text}</MarkdownText>
+                        </div>
+                      ),
+                    )}
+                    {memuatAI && (
+                      <div className="status-ai-memuat">
+                        <LoaderCircle size={15} className="ikon-berputar" />{" "}
+                        Gemini sedang menyusun jawaban...
+                      </div>
+                    )}
                   </div>
-                </article>
+                  <form
+                    className="form-interogasi-ai"
+                    onSubmit={kirimInterogasiAI}
+                  >
+                    <textarea
+                      value={inputAI}
+                      onChange={(event) => setInputAI(event.target.value)}
+                      placeholder={`Tanyakan sesuatu kepada ${wawancaraTersangka[tersangkaDipilih].nama}...`}
+                      rows={2}
+                      maxLength={1200}
+                      disabled={memuatAI}
+                    />
+                    <button
+                      className="tombol tombol-emas"
+                      type="submit"
+                      disabled={!inputAI.trim() || memuatAI}
+                    >
+                      <Send size={15} /> Kirim
+                    </button>
+                  </form>
+                  {errorAI && (
+                    <p className="pesan-error-ai" role="alert">
+                      {errorAI}
+                    </p>
+                  )}
+                </div>
               </div>
             </>
           )}
@@ -761,7 +771,7 @@ export default function RuangInvestigasi({ kembali, selesai }) {
               {hasilAnalisisAI && (
                 <article className="hasil-analisis-ai">
                   <span className="label-panel">LAPORAN ANALISIS AI</span>
-                  <p>{hasilAnalisisAI}</p>
+                  <MarkdownText>{hasilAnalisisAI}</MarkdownText>
                   <button
                     className="tombol tombol-outline"
                     onClick={() => {
@@ -952,7 +962,7 @@ export default function RuangInvestigasi({ kembali, selesai }) {
               {hasilAnalisisAI && (
                 <article className="hasil-analisis-ai">
                   <span className="label-panel">LAPORAN ANALISIS AI</span>
-                  <p>{hasilAnalisisAI}</p>
+                  <MarkdownText>{hasilAnalisisAI}</MarkdownText>
                   <button
                     className="tombol tombol-outline"
                     onClick={() => {
@@ -1073,8 +1083,14 @@ export default function RuangInvestigasi({ kembali, selesai }) {
                       setHasilTuduhan(null);
                     }}
                   >
-                    <span className={`avatar avatar-${orang.warna}`}>
-                      {orang.inisial}
+                    <span
+                      className={`avatar avatar-foto avatar-${orang.warna}`}
+                    >
+                      <img
+                        src={orang.foto}
+                        alt={`Foto ${orang.nama}`}
+                        loading="lazy"
+                      />
                     </span>
                     <span>
                       <strong>{orang.nama}</strong>
