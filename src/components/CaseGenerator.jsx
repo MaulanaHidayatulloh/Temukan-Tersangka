@@ -245,7 +245,10 @@ export default function CaseGenerator({ kembali, mainkan }) {
                   </span>
                   <span>
                     <Users size={14} />
-                    {item.tersangka.length} tersangka
+                    {
+                      (item.kasus?.tersangka ?? item.tersangka ?? []).length
+                    }{" "}
+                    tersangka
                   </span>
                   <span>
                     <Clock3 size={14} />
