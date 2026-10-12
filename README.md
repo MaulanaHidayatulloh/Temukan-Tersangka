@@ -1,16 +1,85 @@
-# React + Vite
+# TemukanTersangka
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Game misteri interaktif berbasis React + Vite dengan backend Node.js yang menghubungkan fitur interogasi dan analisis bukti ke Google Gemini API.
 
-Currently, two official plugins are available:
+## Persyaratan
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Node.js versi LTS terbaru (disarankan Node.js 22 atau lebih baru)
+- API key dari Google AI Studio
+- Koneksi internet saat memakai fitur AI
 
-## React Compiler
+## Instalasi pertama kali
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. Ekstrak ZIP.
+2. Buka folder proyek `Temukan Tersangka` di terminal.
+3. Instal dependensi:
 
-## Expanding the ESLint configuration
+   ```bash
+   npm install
+   ```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+4. Salin `.env.example` menjadi `.env`.
+5. Buka `.env` dan isi `GEMINI_API_KEY` dengan API key milikmu. Jangan unggah file `.env` ke GitHub atau membagikannya kepada orang lain.
+
+   ```env
+   GEMINI_API_KEY=API_KEY_MILIKMU
+   GEMINI_MODEL=gemini-2.5-flash
+   API_PORT=3001
+   ```
+
+## Menjalankan aplikasi
+
+Jalankan dua terminal dari folder proyek yang sama.
+
+**Terminal 1 — backend AI:**
+
+```bash
+npm run server
+```
+
+**Terminal 2 — frontend:**
+
+```bash
+npm run dev
+```
+
+Buka URL yang ditampilkan Vite (biasanya `http://localhost:5173`).
+
+## Memeriksa koneksi AI
+
+Buka `http://localhost:3001/api/health`. Jika konfigurasi terbaca, hasilnya akan memiliki nilai `ok: true` dan `configured: true`.
+
+Pemeriksaan health hanya mengecek server dan keberadaan API key, bukan menjamin bahwa Gemini menerima key atau kuota masih tersedia. Untuk menguji layanan sepenuhnya, coba fitur interogasi atau analisis bukti di aplikasi.
+
+## Struktur kode
+
+```text
+src/
+├── App.jsx
+├── components/
+│   ├── Beranda.jsx
+│   ├── DetailKasus.jsx
+│   ├── HasilAkhir.jsx
+│   ├── Header.jsx
+│   ├── IlustrasiKasus.jsx
+│   ├── Logo.jsx
+│   └── RuangInvestigasi.jsx
+├── data/
+│   └── caseData.js
+├── index.css
+└── main.jsx
+server/
+└── index.js
+```
+
+- `App.jsx`: perpindahan antarhalaman.
+- `src/components/`: komponen UI dipisah berdasarkan tanggung jawabnya.
+- `src/data/caseData.js`: data kasus, bukti, tersangka, dan helper penyimpanan.
+- `server/index.js`: endpoint backend dan permintaan ke Gemini API.
+- `vite.config.js`: meneruskan permintaan `/api` dari frontend ke backend lokal.
+
+## Catatan keamanan
+
+- API key hanya boleh berada di `.env` pada backend. Jangan gunakan awalan `VITE_` untuk API key.
+- `.env` tidak disertakan di ZIP ini demi keamanan. Buat sendiri dari `.env.example`.
+- Folder `.git` dan `node_modules` tidak diperlukan di ZIP distribusi.
