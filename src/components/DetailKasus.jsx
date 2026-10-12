@@ -5,10 +5,23 @@ import {
   MapPin,
   Trophy,
 } from "lucide-react";
-import { bacaProgresTersimpan, kasus } from "../data/caseData.js";
+import {
+  bacaProgresTersimpan,
+  kasus as kasusBawaan,
+  KUNCI_PROGRES,
+} from "../data/caseData.js";
 
-export default function DetailKasus({ kembali, mulai, lihatHasil }) {
-  const progresTersimpan = bacaProgresTersimpan();
+export default function DetailKasus({
+  kembali,
+  mulai,
+  lihatHasil,
+  kasusAI = null,
+}) {
+  const kasus = kasusAI?.kasus || kasusBawaan;
+  const kunciProgres = kasusAI
+    ? `temukantersangka-progres-${kasusAI.id}`
+    : KUNCI_PROGRES;
+  const progresTersimpan = bacaProgresTersimpan(kunciProgres);
   const adaProgres = Boolean(
     progresTersimpan.buktiDitemukan?.length ||
     progresTersimpan.catatan?.trim() ||
@@ -25,27 +38,39 @@ export default function DetailKasus({ kembali, mulai, lihatHasil }) {
       </button>
       <div className="label-atas">
         <span className="garis-emas" />
-        BERKAS INVESTIGASI / MM-001
+        BERKAS INVESTIGASI / {kasusAI?.id || "MM-001"}
       </div>
       <h1 className="judul-detail">
-        Pembunuhan <em>Tengah Malam.</em>
+        {kasusAI ? (
+          <>{kasus.judul}</>
+        ) : (
+          <>
+            Pembunuhan <em>Tengah Malam.</em>
+          </>
+        )}
       </h1>
       <p className="detail-pembuka">
-        Satu korban. Tiga tersangka. Sebuah rahasia yang belum terungkap.
+        {kasusAI
+          ? kasus.tujuan
+          : "Satu korban. Tiga tersangka. Sebuah rahasia yang belum terungkap."}
       </p>
 
       <div className="detail-grid">
         <section className="panel-detail">
           <span className="label-panel">01 / LAPORAN AWAL</span>
-          <h2>Insiden di Blackwood Manor</h2>
+          <h2>
+            {kasusAI
+              ? `Laporan awal: ${kasus.lokasi}`
+              : "Insiden di Blackwood Manor"}
+          </h2>
           <p>{kasus.deskripsi}</p>
           <p>{kasus.tujuan}</p>
           <div className="detail-metadata">
             <span>
-              <MapPin size={15} /> Kediaman Blackwood
+              <MapPin size={15} /> {kasus.lokasi}
             </span>
             <span>
-              <Clock3 size={15} /> Pukul 23.30 WIB
+              <Clock3 size={15} /> {kasus.waktu}
             </span>
           </div>
           <div className="peringatan-detail">
@@ -59,7 +84,9 @@ export default function DetailKasus({ kembali, mulai, lihatHasil }) {
 
         <section className="panel-detail">
           <span className="label-panel">02 / DAFTAR PERSONEL</span>
-          <h2>Tiga orang. Tiga cerita.</h2>
+          <h2>
+            {kasus.tersangka.length} orang. {kasus.tersangka.length} cerita.
+          </h2>
           <div className="daftar-tersangka">
             {kasus.tersangka.map((orang, index) => (
               <article className="tersangka" key={orang.inisial}>

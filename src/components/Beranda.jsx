@@ -9,12 +9,13 @@ import {
   ChevronRight,
   Eye,
   UserRound,
+  Sparkles,
 } from "lucide-react";
 import { kasus, bacaProgresTersimpan } from "../data/caseData.js";
 import IlustrasiKasus from "./IlustrasiKasus.jsx";
 import Logo from "./Logo";
 
-export default function Beranda({ bukaKasus }) {
+export default function Beranda({ bukaKasus, bukaGenerator }) {
   const kasusSelesai = bacaProgresTersimpan().hasilTuduhan === "benar";
 
   return (
@@ -67,6 +68,24 @@ export default function Beranda({ bukaKasus }) {
           <span>TT / 001</span>
           <span>ARSIP INVESTIGASI</span>
         </div>
+      </section>
+
+      <section className="ai-generator-promo">
+        <div className="ai-promo-icon">
+          <Sparkles size={24} />
+        </div>
+        <div>
+          <span className="label-panel">UNIT KASUS DINAMIS</span>
+          <h2>Misteri baru, setiap kali bermain.</h2>
+          <p>
+            Buat skenario investigasi dengan AI, pilih tema sendiri atau biarkan
+            Gemini menentukan misterinya, lalu simpan di arsip pribadi.
+          </p>
+        </div>
+        <button className="tombol tombol-emas" onClick={bukaGenerator}>
+          <Sparkles size={16} /> Buka AI Case Generator{" "}
+          <ArrowUpRight size={16} />
+        </button>
       </section>
 
       <section className="bagian-kasus" id="kasus">

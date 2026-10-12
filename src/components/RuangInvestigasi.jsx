@@ -27,57 +27,78 @@ import {
   bacaRekorTerbaik,
   tentukanPeringkat,
   bacaProgresTersimpan,
-  kasus,
-  barangBukti,
-  wawancaraTersangka,
-  pertanyaanInterogasi,
-  hubunganBukti,
+  kasus as kasusBawaan,
+  barangBukti as barangBuktiBawaan,
+  wawancaraTersangka as wawancaraTersangkaBawaan,
+  pertanyaanInterogasi as pertanyaanInterogasiBawaan,
+  hubunganBukti as hubunganBuktiBawaan,
 } from "../data/caseData.js";
 
-export default function RuangInvestigasi({ kembali, selesai }) {
-  const [tab, setTab] = useState(() => bacaProgresTersimpan().tab || "bukti");
+export default function RuangInvestigasi({ kembali, selesai, kasusAI = null }) {
+  const kasus = kasusAI?.kasus || kasusBawaan;
+  const barangBukti = kasusAI?.barangBukti || barangBuktiBawaan;
+  const wawancaraTersangka =
+    kasusAI?.wawancaraTersangka || wawancaraTersangkaBawaan;
+  const pertanyaanInterogasi =
+    kasusAI?.pertanyaanInterogasi || pertanyaanInterogasiBawaan;
+  const hubunganBukti = kasusAI?.hubunganBukti || hubunganBuktiBawaan;
+  const kunciProgresAktif = kasusAI
+    ? `temukantersangka-progres-${kasusAI.id}`
+    : KUNCI_PROGRES;
+  const kunciRekorAktif = kasusAI
+    ? `temukantersangka-rekor-${kasusAI.id}`
+    : KUNCI_REKOR;
+  const bacaProgresAktif = () => bacaProgresTersimpan(kunciProgresAktif);
+  const pelakuResmi = kasusAI
+    ? wawancaraTersangka.find(
+        (orang) => orang.id === kasusAI.solusiRahasia.pelakuId,
+      )?.nama
+    : "Arthur Wells";
+  const [tab, setTab] = useState(() => bacaProgresAktif().tab || "bukti");
   const [buktiDibuka, setBuktiDibuka] = useState(
-    () => bacaProgresTersimpan().buktiDibuka || null,
+    () => bacaProgresAktif().buktiDibuka || null,
   );
   const [buktiDitemukan, setBuktiDitemukan] = useState(
-    () => bacaProgresTersimpan().buktiDitemukan || [],
+    () => bacaProgresAktif().buktiDitemukan || [],
   );
   const [tersangkaDipilih, setTersangkaDipilih] = useState(
-    () => bacaProgresTersimpan().tersangkaDipilih ?? 0,
+    () => bacaProgresAktif().tersangkaDipilih ?? 0,
   );
   const [catatan, setCatatan] = useState(
-    () => bacaProgresTersimpan().catatan || "",
+    () => bacaProgresAktif().catatan || "",
   );
   const [tuduhan, setTuduhan] = useState(
-    () => bacaProgresTersimpan().tuduhan || "",
+    () => bacaProgresAktif().tuduhan || "",
   );
   const [hasilTuduhan, setHasilTuduhan] = useState(
-    () => bacaProgresTersimpan().hasilTuduhan || null,
+    () => bacaProgresAktif().hasilTuduhan || null,
   );
   const [buktiRelasiA, setBuktiRelasiA] = useState(
-    () => bacaProgresTersimpan().buktiRelasiA || "",
+    () => bacaProgresAktif().buktiRelasiA || "",
   );
   const [buktiRelasiB, setBuktiRelasiB] = useState(
-    () => bacaProgresTersimpan().buktiRelasiB || "",
+    () => bacaProgresAktif().buktiRelasiB || "",
   );
   const [hasilRelasi, setHasilRelasi] = useState(
-    () => bacaProgresTersimpan().hasilRelasi || null,
+    () => bacaProgresAktif().hasilRelasi || null,
   );
   const [pertanyaanDijawab, setPertanyaanDijawab] = useState(
-    () => bacaProgresTersimpan().pertanyaanDijawab || {},
+    () => bacaProgresAktif().pertanyaanDijawab || {},
   );
   const [jawabanAktif, setJawabanAktif] = useState(
-    () => bacaProgresTersimpan().jawabanAktif || null,
+    () => bacaProgresAktif().jawabanAktif || null,
   );
-  const [rekorTerbaik, setRekorTerbaik] = useState(bacaRekorTerbaik);
+  const [rekorTerbaik, setRekorTerbaik] = useState(() =>
+    bacaRekorTerbaik(kunciRekorAktif),
+  );
   const [riwayatAI, setRiwayatAI] = useState(
-    () => bacaProgresTersimpan().riwayatAI || { 0: [], 1: [], 2: [] },
+    () => bacaProgresAktif().riwayatAI || { 0: [], 1: [], 2: [] },
   );
   const [inputAI, setInputAI] = useState("");
   const [memuatAI, setMemuatAI] = useState(false);
   const [errorAI, setErrorAI] = useState("");
   const [hasilAnalisisAI, setHasilAnalisisAI] = useState(
-    () => bacaProgresTersimpan().hasilAnalisisAI || "",
+    () => bacaProgresAktif().hasilAnalisisAI || "",
   );
   const [memuatAnalisisAI, setMemuatAnalisisAI] = useState(false);
 
@@ -121,7 +142,7 @@ export default function RuangInvestigasi({ kembali, selesai }) {
     };
 
     try {
-      window.localStorage.setItem(KUNCI_PROGRES, JSON.stringify(progres));
+      window.localStorage.setItem(kunciProgresAktif, JSON.stringify(progres));
     } catch {
       // Investigasi tetap dapat digunakan jika penyimpanan browser tidak tersedia.
     }
@@ -140,27 +161,30 @@ export default function RuangInvestigasi({ kembali, selesai }) {
     jawabanAktif,
     riwayatAI,
     hasilAnalisisAI,
+    kunciProgresAktif,
   ]);
 
   useEffect(() => {
-    if (skor > bacaRekorTerbaik()) {
+    if (skor > bacaRekorTerbaik(kunciRekorAktif)) {
       try {
-        window.localStorage.setItem(KUNCI_REKOR, String(skor));
+        window.localStorage.setItem(kunciRekorAktif, String(skor));
       } catch {
         // Skor sesi tetap berjalan meskipun penyimpanan rekor tidak tersedia.
       }
     }
-  }, [skor]);
+  }, [skor, kunciRekorAktif]);
 
   function resetInvestigasi() {
     if (
       !window.confirm(
-        "Mulai ulang investigasi MM-001? Semua bukti, analisis, jawaban interogasi, dan catatan yang tersimpan akan dihapus.",
+        `Mulai ulang investigasi ${kasusAI?.id || "MM-001"}? Semua bukti, analisis, jawaban interogasi, dan catatan yang tersimpan akan dihapus.`,
       )
     )
       return;
-    setRekorTerbaik(Math.max(rekorTerbaik, skor, bacaRekorTerbaik()));
-    window.localStorage.removeItem(KUNCI_PROGRES);
+    setRekorTerbaik(
+      Math.max(rekorTerbaik, skor, bacaRekorTerbaik(kunciRekorAktif)),
+    );
+    window.localStorage.removeItem(kunciProgresAktif);
     setTab("bukti");
     setBuktiDibuka(null);
     setBuktiDitemukan([]);
@@ -234,6 +258,23 @@ export default function RuangInvestigasi({ kembali, selesai }) {
               petunjuk,
             })),
           notes: catatan,
+          caseContext: kasusAI
+            ? {
+                judul: kasus.judul,
+                deskripsi: kasus.deskripsi,
+                tersangka: wawancaraTersangka.map(
+                  ({ nama, peran, alibi, pernyataan }) => ({
+                    nama,
+                    peran,
+                    alibi,
+                    pernyataan,
+                  }),
+                ),
+                bukti: barangBukti
+                  .filter((item) => buktiDitemukan.includes(item.id))
+                  .map(({ id, nama, detail }) => ({ id, nama, detail })),
+              }
+            : undefined,
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -285,6 +326,23 @@ export default function RuangInvestigasi({ kembali, selesai }) {
           ),
           notes: catatan,
           selectedEvidence: [buktiRelasiA, buktiRelasiB].filter(Boolean),
+          caseContext: kasusAI
+            ? {
+                judul: kasus.judul,
+                deskripsi: kasus.deskripsi,
+                tersangka: wawancaraTersangka.map(
+                  ({ nama, peran, alibi, pernyataan }) => ({
+                    nama,
+                    peran,
+                    alibi,
+                    pernyataan,
+                  }),
+                ),
+                bukti: barangBukti
+                  .filter((item) => buktiDitemukan.includes(item.id))
+                  .map(({ id, nama, detail }) => ({ id, nama, detail })),
+              }
+            : undefined,
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -304,7 +362,7 @@ export default function RuangInvestigasi({ kembali, selesai }) {
 
   function kirimTuduhan() {
     if (!tuduhan) return;
-    setHasilTuduhan(tuduhan === "Arthur Wells" ? "benar" : "belum");
+    setHasilTuduhan(tuduhan === pelakuResmi ? "benar" : "belum");
   }
 
   return (
@@ -314,12 +372,18 @@ export default function RuangInvestigasi({ kembali, selesai }) {
       </button>
       <div className="label-atas">
         <span className="garis-emas" />
-        RUANG INVESTIGASI / MM-001
+        RUANG INVESTIGASI / {kasusAI?.id || "MM-001"}
       </div>
       <div className="judul-ruang-investigasi">
         <div>
           <h1 className="judul-detail">
-            Pembunuhan <em>Tengah Malam.</em>
+            {kasusAI ? (
+              kasus.judul
+            ) : (
+              <>
+                Pembunuhan <em>Tengah Malam.</em>
+              </>
+            )}
           </h1>
           <p className="detail-pembuka">
             Periksa setiap bukti, bandingkan keterangan, dan tarik kesimpulanmu
@@ -336,7 +400,7 @@ export default function RuangInvestigasi({ kembali, selesai }) {
             : buktiDitemukan.length
               ? "SEDANG DISELIDIKI"
               : "BELUM DIMULAI"}
-          <strong>MM-001</strong>
+          <strong>{kasusAI?.id || "MM-001"}</strong>
         </div>
       </div>
 
@@ -1122,7 +1186,7 @@ export default function RuangInvestigasi({ kembali, selesai }) {
                     </strong>
                     <p>
                       {hasilTuduhan === "benar"
-                        ? "Arthur Wells adalah pelaku dalam skenario kasus ini. Jadwal pelayanan dan minuman korban menjadi petunjuk penting. Kamu berhasil menghubungkan kesempatan dengan bukti di TKP."
+                        ? `${pelakuResmi} adalah pelaku dalam skenario kasus ini. Kamu berhasil menghubungkan bukti dan keterangan tersangka untuk memecahkan kasus.`
                         : "Bukti yang tersedia belum cukup mendukung tuduhan tersebut. Periksa kembali barang bukti, bandingkan alibi, lalu coba simpulkan lagi."}
                     </p>
                     {hasilTuduhan === "belum" && (

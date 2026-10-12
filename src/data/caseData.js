@@ -1,9 +1,9 @@
 export const KUNCI_PROGRES = "temukantersangka-progres-MM-001";
 export const KUNCI_REKOR = "temukantersangka-rekor-MM-001";
 
-export function bacaRekorTerbaik() {
+export function bacaRekorTerbaik(key = KUNCI_REKOR) {
   try {
-    return Number(window.localStorage.getItem(KUNCI_REKOR)) || 0;
+    return Number(window.localStorage.getItem(key)) || 0;
   } catch {
     return 0;
   }
@@ -46,9 +46,9 @@ export function tentukanPeringkat(skor) {
   };
 }
 
-export function bacaProgresTersimpan() {
+export function bacaProgresTersimpan(key = KUNCI_PROGRES) {
   try {
-    const data = window.localStorage.getItem(KUNCI_PROGRES);
+    const data = window.localStorage.getItem(key);
     return data ? JSON.parse(data) : {};
   } catch {
     return {};

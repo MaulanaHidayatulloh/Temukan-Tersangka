@@ -224,8 +224,153 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function konteksKasusPublik(raw) {
+  if (!raw || typeof raw !== "object") return CASE_CONTEXT;
+  const judul = safeText(raw.judul, 120);
+  const deskripsi = safeText(raw.deskripsi, 1200);
+  const tersangka = Array.isArray(raw.tersangka)
+    ? raw.tersangka.slice(0, 5)
+    : [];
+  const bukti = Array.isArray(raw.bukti) ? raw.bukti.slice(0, 8) : [];
+  if (!judul || tersangka.length < 3) return CASE_CONTEXT;
+  return `
+Kasus aktif TemukanTersangka: ${judul}.
+Laporan kasus: ${deskripsi}
+Tersangka yang diketahui publik:
+${tersangka.map((x) => `- ${safeText(x.nama, 100)} (${safeText(x.peran, 100)}): ${safeText(x.alibi, 400)}; pernyataan: ${safeText(x.pernyataan, 400)}`).join("\n")}
+Barang bukti yang ditemukan:
+${bukti.map((x) => `- ${safeText(x.id, 30)} ${safeText(x.nama, 120)}: ${safeText(x.detail, 500)}`).join("\n")}
+Gunakan hanya informasi kasus ini. Jangan mengganti identitas atau fakta tersangka. Jangan mengungkap pelaku kecuali pemain mengajukan kesimpulan akhir melalui sistem permainan.
+`;
+}
+
+function normalisasiKasusAI(raw, mode, tema, kesulitan, jumlahTersangka) {
+  if (
+    !raw ||
+    typeof raw !== "object" ||
+    !raw.kasus ||
+    !Array.isArray(raw.tersangka) ||
+    !Array.isArray(raw.barangBukti) ||
+    !Array.isArray(raw.pertanyaanInterogasi) ||
+    !raw.solusiRahasia
+  )
+    throw new Error("Struktur kasus AI tidak lengkap.");
+  const suspects = raw.tersangka;
+  const evidence = raw.barangBukti;
+  if (
+    suspects.length !== jumlahTersangka ||
+    suspects.length < 3 ||
+    suspects.length > 5
+  )
+    throw new Error("Jumlah tersangka tidak sesuai permintaan.");
+  if (evidence.length < 4 || evidence.length > 8)
+    throw new Error("Kasus harus memiliki 4–8 barang bukti.");
+  const ids = new Set(suspects.map((x) => x?.id));
+  const evidenceIds = new Set(evidence.map((x) => x?.id));
+  if (
+    ids.size !== suspects.length ||
+    [...ids].some((x) => typeof x !== "string" || !x)
+  )
+    throw new Error("ID tersangka duplikat atau tidak valid.");
+  if (
+    evidenceIds.size !== evidence.length ||
+    [...evidenceIds].some((x) => typeof x !== "string" || !x)
+  )
+    throw new Error("ID bukti duplikat atau tidak valid.");
+  if (!ids.has(raw.solusiRahasia.pelakuId))
+    throw new Error("Pelaku resmi tidak ditemukan di daftar tersangka.");
+  if (
+    !Array.isArray(raw.solusiRahasia.buktiPenentu) ||
+    !raw.solusiRahasia.buktiPenentu.some((x) => evidenceIds.has(x))
+  )
+    throw new Error("Solusi harus menyertakan bukti penentu yang valid.");
+  if (
+    raw.pertanyaanInterogasi.length !== suspects.length ||
+    raw.pertanyaanInterogasi.some(
+      (q) => !Array.isArray(q) || q.length < 2 || q.length > 4,
+    )
+  )
+    throw new Error("Pertanyaan interogasi belum lengkap.");
+  const text = (v, max = 1000) => {
+    if (typeof v !== "string" || !v.trim())
+      throw new Error("Ada bagian kasus yang kosong.");
+    return v.trim().slice(0, max);
+  };
+  const colors = ["merah", "emas", "abu", "biru", "hijau"];
+  const tersangka = suspects.map((x, i) => ({
+    id: x.id,
+    nama: text(x.nama, 100),
+    peran: text(x.peran, 100),
+    inisial: text(
+      x.inisial ||
+        String(x.nama || "TT")
+          .slice(0, 2)
+          .toUpperCase(),
+      4,
+    ),
+    foto: `https://randomuser.me/api/portraits/lego/${i + 1}.jpg`,
+    warna: colors[i % colors.length],
+    deskripsi: text(x.deskripsi, 500),
+    alibi: text(x.alibi, 500),
+    pernyataan: text(x.pernyataan, 700),
+    catatan: text(x.catatan, 700),
+  }));
+  const barangBukti = evidence.map((x) => ({
+    id: x.id,
+    nama: text(x.nama, 120),
+    kategori: text(x.kategori || "PETUNJUK", 60),
+    lokasi: text(x.lokasi, 120),
+    ikon: safeText(x.ikon, 8) || "▤",
+    ringkasan: text(x.ringkasan, 300),
+    detail: text(x.detail, 900),
+    petunjuk: text(x.petunjuk, 500),
+  }));
+  const pertanyaanInterogasi = raw.pertanyaanInterogasi.map((list, i) =>
+    list.map((q, j) => ({
+      id: `s${i + 1}-${safeText(q.id, 35) || `q${j + 1}`}`,
+      pertanyaan: text(q.pertanyaan, 300),
+      jawaban: text(q.jawaban, 500),
+      catatan: text(q.catatan, 500),
+    })),
+  );
+  const pelaku = tersangka.find((x) => x.id === raw.solusiRahasia.pelakuId);
+  return {
+    id: `AI-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    isGenerated: true,
+    dibuatPada: new Date().toISOString(),
+    mode,
+    kasus: {
+      id: "AI",
+      judul: text(raw.kasus.judul, 120),
+      tema: text(raw.kasus.tema || tema, 60),
+      lokasi: text(raw.kasus.lokasi, 150),
+      waktu: text(raw.kasus.waktu, 80),
+      kesulitan: text(raw.kasus.kesulitan || kesulitan, 30).toUpperCase(),
+      deskripsi: text(raw.kasus.deskripsi, 1200),
+      tujuan: text(raw.kasus.tujuan, 500),
+      tersangka,
+    },
+    barangBukti,
+    wawancaraTersangka: tersangka,
+    pertanyaanInterogasi,
+    hubunganBukti:
+      raw.hubunganBukti && typeof raw.hubunganBukti === "object"
+        ? raw.hubunganBukti
+        : {},
+    solusiRahasia: {
+      pelakuId: pelaku.id,
+      motif: text(raw.solusiRahasia.motif, 1000),
+      kronologi: text(raw.solusiRahasia.kronologi, 1200),
+      buktiPenentu: raw.solusiRahasia.buktiPenentu.filter((x) =>
+        evidenceIds.has(x),
+      ),
+    },
+  };
+}
+
 // MEMBANGUN PERMINTAAN AI
 function buildRequest(body) {
+  const caseContext = konteksKasusPublik(body.caseContext);
   const mode =
     body.mode === "analyze"
       ? "analyze"
@@ -244,11 +389,11 @@ function buildRequest(body) {
     const suspectName = safeText(body.suspectName, 100);
     const question = safeText(body.question);
 
-    const validSuspects = [
-      "Victoria Blackwood",
-      "Edward Hayes",
-      "Arthur Wells",
-    ];
+    const validSuspects = Array.isArray(body.caseContext?.tersangka)
+      ? body.caseContext.tersangka
+          .map((x) => safeText(x?.nama, 100))
+          .filter(Boolean)
+      : ["Victoria Blackwood", "Edward Hayes", "Arthur Wells"];
 
     if (!validSuspects.includes(suspectName)) {
       throw Object.assign(new Error("Tersangka tidak valid."), {
@@ -283,7 +428,7 @@ function buildRequest(body) {
       : [];
 
     const instruction = `
-${CASE_CONTEXT}
+${caseContext}
 
 MODE: INTEROGASI.
 
@@ -353,7 +498,7 @@ ${notes || "(belum ada)"}
     : [];
 
   const instruction = `
-${CASE_CONTEXT}
+${caseContext}
 
 MODE: ANALISIS BUKTI.
 
@@ -529,6 +674,116 @@ const server = http.createServer(async (req, res) => {
       model: MODEL,
       fallbackModels: FALLBACK_MODELS,
     });
+  }
+
+  // GENERATOR KASUS AI
+  if (pathname === "/api/cases/generate") {
+    if (req.method !== "POST") {
+      res.setHeader("Allow", "POST");
+      return sendJson(res, 405, {
+        error: "Endpoint generator hanya menerima POST.",
+      });
+    }
+    if (!allowedByRateLimit(req))
+      return sendJson(res, 429, {
+        error: "Terlalu banyak permintaan. Tunggu satu menit lalu coba lagi.",
+      });
+    if (!hasUsableApiKey())
+      return sendJson(res, 503, {
+        error: "Gemini belum dikonfigurasi. Periksa GEMINI_API_KEY di .env.",
+      });
+    try {
+      const body = await readJson(req);
+      const mode = body.mode === "custom" ? "custom" : "random";
+      const allowedThemes = [
+        "Pembunuhan",
+        "Pencurian",
+        "Penipuan",
+        "Pemerasan",
+        "Penculikan Fiktif",
+        "Sabotase",
+        "Misteri Benda Hilang",
+        "Acak",
+      ];
+      const allowedDifficulties = ["MUDAH", "MENENGAH", "SULIT"];
+      const tema =
+        mode === "custom" && allowedThemes.includes(body.tema)
+          ? body.tema
+          : "Acak";
+      const kesulitan =
+        mode === "custom" && allowedDifficulties.includes(body.kesulitan)
+          ? body.kesulitan
+          : "MENENGAH";
+      const jumlahTersangka =
+        mode === "custom" && [3, 4, 5].includes(Number(body.jumlahTersangka))
+          ? Number(body.jumlahTersangka)
+          : 3;
+      const prompt = `Buat satu kasus misteri fiktif interaktif berbahasa Indonesia untuk game TemukanTersangka. Mode: ${mode === "random" ? "acak sepenuhnya" : "kustom"}. Tema: ${tema}. Kesulitan: ${kesulitan}. Jumlah tersangka tepat ${jumlahTersangka}.
+
+Aturan: tentukan satu pelaku resmi terlebih dahulu; kronologi, motif, alibi, bukti, dan jawaban interogasi harus konsisten. Deskripsi publik tidak boleh membocorkan pelaku. Tersangka tak bersalah juga harus masuk akal untuk dicurigai. Semua karakter dan lokasi fiktif. Sertakan 4–8 bukti. Setiap tersangka memiliki 2 pertanyaan dan jawaban awal yang sesuai pengetahuan karakter. Gunakan ID tersangka S-01, S-02, dst. ID bukti B-01, B-02, dst. Jawaban hanya JSON tanpa Markdown dengan struktur: {"kasus":{"judul":"","tema":"","lokasi":"","waktu":"","kesulitan":"${kesulitan}","deskripsi":"","tujuan":""},"tersangka":[{"id":"S-01","nama":"","peran":"","inisial":"","deskripsi":"","alibi":"","pernyataan":"","catatan":""}],"barangBukti":[{"id":"B-01","nama":"","kategori":"","lokasi":"","ikon":"▤","ringkasan":"","detail":"","petunjuk":""}],"pertanyaanInterogasi":[[{"id":"q-1","pertanyaan":"","jawaban":"","catatan":""},{"id":"q-2","pertanyaan":"","jawaban":"","catatan":""}]],"hubunganBukti":{},"solusiRahasia":{"pelakuId":"S-02","motif":"","kronologi":"","buktiPenentu":["B-01"]}}. Isi semua field. Buat hubunganBukti dengan key format "B-01|B-02" bila ada hubungan yang masuk akal.`;
+      const result = await callGemini({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 8192,
+          responseMimeType: "application/json",
+        },
+      });
+      if (!result)
+        return sendJson(res, 502, {
+          error: "Gemini tidak dapat dihubungi. Coba lagi.",
+        });
+      if (!result.response.ok) {
+        const msg =
+          result.result?.error?.message || "Gemini gagal membuat kasus.";
+        return sendJson(res, result.response.status === 429 ? 429 : 502, {
+          error: msg,
+        });
+      }
+      const candidate = result.result?.candidates?.[0];
+      const answer = (candidate?.content?.parts || [])
+        .map((p) => p.text || "")
+        .join("")
+        .trim();
+      if (!answer || candidate?.finishReason === "MAX_TOKENS")
+        return sendJson(res, 502, {
+          error: "Jawaban Gemini terpotong. Coba buat kasus lagi.",
+        });
+      let raw;
+      try {
+        raw = JSON.parse(answer);
+      } catch {
+        return sendJson(res, 502, {
+          error: "Format jawaban Gemini bukan JSON valid. Silakan coba lagi.",
+        });
+      }
+      try {
+        const kasusAI = normalisasiKasusAI(
+          raw,
+          mode,
+          tema,
+          kesulitan,
+          jumlahTersangka,
+        );
+        return sendJson(res, 200, {
+          ok: true,
+          kasus: kasusAI,
+          model: result.model,
+        });
+      } catch (error) {
+        console.warn("Kasus AI tidak lolos validasi:", error.message);
+        return sendJson(res, 502, {
+          error: `Kasus AI belum valid: ${error.message} Coba buat ulang.`,
+        });
+      }
+    } catch (error) {
+      if (error?.statusCode)
+        return sendJson(res, error.statusCode, { error: error.message });
+      console.error("Generator AI:", error);
+      return sendJson(res, 500, {
+        error: "Terjadi kesalahan saat membuat kasus AI.",
+      });
+    }
   }
 
   // VALIDASI ENDPOINT

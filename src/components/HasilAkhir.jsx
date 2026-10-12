@@ -12,12 +12,22 @@ import {
   bacaRekorTerbaik,
   tentukanPeringkat,
   bacaProgresTersimpan,
-  kasus,
-  barangBukti,
+  kasus as kasusBawaan,
+  barangBukti as barangBuktiBawaan,
+  KUNCI_PROGRES,
+  KUNCI_REKOR,
 } from "../data/caseData.js";
 
-export default function HasilAkhir({ kembali, mainLagi }) {
-  const progres = bacaProgresTersimpan();
+export default function HasilAkhir({ kembali, mainLagi, kasusAI = null }) {
+  const kasus = kasusAI?.kasus || kasusBawaan;
+  const barangBukti = kasusAI?.barangBukti || barangBuktiBawaan;
+  const kunciProgres = kasusAI
+    ? `temukantersangka-progres-${kasusAI.id}`
+    : KUNCI_PROGRES;
+  const kunciRekor = kasusAI
+    ? `temukantersangka-rekor-${kasusAI.id}`
+    : KUNCI_REKOR;
+  const progres = bacaProgresTersimpan(kunciProgres);
   const jumlahPertanyaan = Object.keys(progres.pertanyaanDijawab || {}).filter(
     (kunci) => progres.pertanyaanDijawab[kunci],
   ).length;
@@ -28,7 +38,7 @@ export default function HasilAkhir({ kembali, mainLagi }) {
     (progres.hasilRelasi ? 100 : 0) +
     (progres.hasilTuduhan === "benar" ? 500 : 0);
   const peringkat = tentukanPeringkat(skor);
-  const rekor = bacaRekorTerbaik();
+  const rekor = bacaRekorTerbaik(kunciRekor);
   const daftarBukti = buktiDitemukan
     .map((id) => barangBukti.find((bukti) => bukti.id === id))
     .filter(Boolean);
@@ -42,13 +52,16 @@ export default function HasilAkhir({ kembali, mainLagi }) {
         <div className="hasil-lencana">
           <Trophy size={30} />
         </div>
-        <span className="label-panel">LAPORAN PENUTUP / MM-001</span>
+        <span className="label-panel">
+          LAPORAN PENUTUP / {kasusAI?.id || "MM-001"}
+        </span>
         <h1 className="judul-detail">
           Kasus <em>Terpecahkan.</em>
         </h1>
         <p className="detail-pembuka">
-          Penyelidikan Pembunuhan Tengah Malam telah selesai. Berikut ringkasan
-          pencapaianmu sebagai penyelidik.
+          {kasusAI
+            ? `Penyelidikan ${kasus.judul} telah selesai. Berikut ringkasan pencapaianmu sebagai penyelidik.`
+            : "Penyelidikan Pembunuhan Tengah Malam telah selesai. Berikut ringkasan pencapaianmu sebagai penyelidik."}
         </p>
         <div className="hasil-skor-besar">
           <span>SKOR AKHIR</span>
@@ -116,9 +129,9 @@ export default function HasilAkhir({ kembali, mainLagi }) {
         <div className="hasil-kesimpulan">
           <strong>Kesimpulan kasus</strong>
           <p>
-            Arthur Wells adalah pelaku dalam skenario fiktif MM-001. Jadwal
-            pelayanan dan cangkir teh menjadi petunjuk penting untuk mengungkap
-            kesempatan dan cara kejadian.
+            {kasusAI
+              ? `${kasusAI.wawancaraTersangka.find((item) => item.id === kasusAI.solusiRahasia.pelakuId)?.nama || "Pelaku"} adalah pelaku dalam skenario ${kasusAI.id}. Motif dan kronologi resmi telah ditetapkan sejak kasus dibuat.`
+              : "Arthur Wells adalah pelaku dalam skenario fiktif MM-001. Jadwal pelayanan dan cangkir teh menjadi petunjuk penting untuk mengungkap kesempatan dan cara kejadian."}
           </p>
         </div>
       </section>
