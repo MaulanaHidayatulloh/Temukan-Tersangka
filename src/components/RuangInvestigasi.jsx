@@ -362,7 +362,55 @@ export default function RuangInvestigasi({ kembali, selesai, kasusAI = null }) {
 
   function kirimTuduhan() {
     if (!tuduhan) return;
-    setHasilTuduhan(tuduhan === pelakuResmi ? "benar" : "belum");
+    const status = tuduhan === pelakuResmi ? "benar" : "belum";
+    const hasilSkor =
+      buktiDitemukan.length * 100 +
+      jumlahPertanyaanDijawab * 40 +
+      (hasilRelasi ? 100 : 0) +
+      (status === "benar" ? 500 : 0);
+    const snapshot = {
+      tab: "tuduhan",
+      buktiDibuka,
+      buktiDitemukan,
+      tersangkaDipilih,
+      catatan,
+      tuduhan,
+      hasilTuduhan: status,
+      buktiRelasiA,
+      buktiRelasiB,
+      hasilRelasi,
+      pertanyaanDijawab,
+      jawabanAktif,
+      riwayatAI,
+      hasilAnalisisAI,
+      diperbaruiPada: new Date().toISOString(),
+    };
+    if (status === "benar") {
+      try {
+        window.localStorage.setItem(
+          kunciProgresAktif,
+          JSON.stringify(snapshot),
+        );
+        window.localStorage.setItem(
+          kunciRekorAktif,
+          String(Math.max(bacaRekorTerbaik(kunciRekorAktif), hasilSkor)),
+        );
+      } catch {
+        /* hasil tetap ditampilkan */
+      }
+    } else {
+      // Keputusan salah mengakhiri percobaan. Jangan simpan progres kasus yang gagal.
+      window.localStorage.removeItem(kunciProgresAktif);
+    }
+    setHasilTuduhan(status);
+    selesai({
+      status,
+      snapshot,
+      skor: hasilSkor,
+      tuduhan,
+      pelakuResmi,
+      kasusId: kasusAI?.id || "MM-001",
+    });
   }
 
   return (
@@ -1141,6 +1189,7 @@ export default function RuangInvestigasi({ kembali, selesai, kasusAI = null }) {
                 {wawancaraTersangka.map((orang) => (
                   <button
                     key={orang.nama}
+                    disabled={Boolean(hasilTuduhan)}
                     className={`opsi-tuduhan-item ${tuduhan === orang.nama ? "aktif" : ""}`}
                     onClick={() => {
                       setTuduhan(orang.nama);

@@ -11,9 +11,11 @@ export default function App() {
   const [halaman, setHalaman] = useState("beranda");
   const [bagianAktif, setBagianAktif] = useState("beranda");
   const [kasusAI, setKasusAI] = useState(null);
+  const [hasilPercobaan, setHasilPercobaan] = useState(null);
   function keAtas() {
     setHalaman("beranda");
     setKasusAI(null);
+    setHasilPercobaan(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
   function bukaGenerator() {
@@ -23,6 +25,7 @@ export default function App() {
   }
   function mainkanKasusAI(item) {
     setKasusAI(item);
+    setHasilPercobaan(null);
     setHalaman("detail");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -30,6 +33,7 @@ export default function App() {
     if (kasusAI)
       window.localStorage.removeItem(`temukantersangka-progres-${kasusAI.id}`);
     else window.localStorage.removeItem(KUNCI_PROGRES);
+    setHasilPercobaan(null);
     setHalaman("investigasi");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -50,10 +54,12 @@ export default function App() {
         <Beranda
           bukaKasus={() => {
             setKasusAI(null);
+            setHasilPercobaan(null);
             setHalaman("detail");
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
           bukaGenerator={bukaGenerator}
+          mainkanKasusAI={mainkanKasusAI}
         />
       )}
       {halaman === "generator" && (
@@ -82,7 +88,8 @@ export default function App() {
             setHalaman("detail");
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
-          selesai={() => {
+          selesai={(hasil) => {
+            setHasilPercobaan(hasil || null);
             setHalaman("hasil");
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
@@ -92,6 +99,7 @@ export default function App() {
         <HasilAkhir
           key={kasusAI?.id || "MM-001"}
           kasusAI={kasusAI}
+          hasilPercobaan={hasilPercobaan}
           kembali={keAtas}
           mainLagi={mulaiUlang}
         />

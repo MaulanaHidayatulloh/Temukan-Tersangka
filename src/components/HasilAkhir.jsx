@@ -18,7 +18,12 @@ import {
   KUNCI_REKOR,
 } from "../data/caseData.js";
 
-export default function HasilAkhir({ kembali, mainLagi, kasusAI = null }) {
+export default function HasilAkhir({
+  kembali,
+  mainLagi,
+  kasusAI = null,
+  hasilPercobaan = null,
+}) {
   const kasus = kasusAI?.kasus || kasusBawaan;
   const barangBukti = kasusAI?.barangBukti || barangBuktiBawaan;
   const kunciProgres = kasusAI
@@ -27,16 +32,20 @@ export default function HasilAkhir({ kembali, mainLagi, kasusAI = null }) {
   const kunciRekor = kasusAI
     ? `temukantersangka-rekor-${kasusAI.id}`
     : KUNCI_REKOR;
-  const progres = bacaProgresTersimpan(kunciProgres);
+  const progres =
+    hasilPercobaan?.snapshot || bacaProgresTersimpan(kunciProgres);
+  const gagal =
+    hasilPercobaan?.status === "belum" || progres.hasilTuduhan === "belum";
   const jumlahPertanyaan = Object.keys(progres.pertanyaanDijawab || {}).filter(
     (kunci) => progres.pertanyaanDijawab[kunci],
   ).length;
   const buktiDitemukan = progres.buktiDitemukan || [];
   const skor =
+    hasilPercobaan?.skor ??
     buktiDitemukan.length * 100 +
-    jumlahPertanyaan * 40 +
-    (progres.hasilRelasi ? 100 : 0) +
-    (progres.hasilTuduhan === "benar" ? 500 : 0);
+      jumlahPertanyaan * 40 +
+      (progres.hasilRelasi ? 100 : 0) +
+      (progres.hasilTuduhan === "benar" ? 500 : 0);
   const peringkat = tentukanPeringkat(skor);
   const rekor = bacaRekorTerbaik(kunciRekor);
   const daftarBukti = buktiDitemukan
@@ -56,18 +65,22 @@ export default function HasilAkhir({ kembali, mainLagi, kasusAI = null }) {
           LAPORAN PENUTUP / {kasusAI?.id || "MM-001"}
         </span>
         <h1 className="judul-detail">
-          Kasus <em>Terpecahkan.</em>
+          Kasus <em>{gagal ? "Belum Terpecahkan." : "Terpecahkan."}</em>
         </h1>
         <p className="detail-pembuka">
-          {kasusAI
-            ? `Penyelidikan ${kasus.judul} telah selesai. Berikut ringkasan pencapaianmu sebagai penyelidik.`
-            : "Penyelidikan Pembunuhan Tengah Malam telah selesai. Berikut ringkasan pencapaianmu sebagai penyelidik."}
+          {gagal
+            ? `Tuduhan terhadap ${hasilPercobaan?.tuduhan || progres.tuduhan || "tersangka pilihanmu"} keliru. Percobaan ini berakhir dan progres kasus yang gagal telah dihapus. Mainkan ulang untuk memulai dari awal.`
+            : kasusAI
+              ? `Penyelidikan ${kasus.judul} telah selesai. Berikut ringkasan pencapaianmu sebagai penyelidik.`
+              : "Penyelidikan Pembunuhan Tengah Malam telah selesai. Berikut ringkasan pencapaianmu sebagai penyelidik."}
         </p>
         <div className="hasil-skor-besar">
           <span>SKOR AKHIR</span>
           <strong>{skor.toLocaleString("id-ID")}</strong>
           <small>
-            Rekor terbaik: {Math.max(rekor, skor).toLocaleString("id-ID")} poin
+            {gagal
+              ? "Skor percobaan gagal"
+              : `Rekor terbaik: ${Math.max(rekor, skor).toLocaleString("id-ID")} poin`}
           </small>
         </div>
       </div>
@@ -102,8 +115,11 @@ export default function HasilAkhir({ kembali, mainLagi, kasusAI = null }) {
           <h2>{peringkat.nama}</h2>
           <p>{peringkat.deskripsi}</p>
         </div>
-        <span className="hasil-status-selesai">
-          <CheckCircle2 size={15} /> SELESAI
+        <span
+          className={`hasil-status-selesai ${gagal ? "hasil-status-gagal" : ""}`}
+        >
+          {gagal ? <RotateCcw size={15} /> : <CheckCircle2 size={15} />}{" "}
+          {gagal ? "GAGAL" : "SELESAI"}
         </span>
       </section>
 
@@ -129,9 +145,11 @@ export default function HasilAkhir({ kembali, mainLagi, kasusAI = null }) {
         <div className="hasil-kesimpulan">
           <strong>Kesimpulan kasus</strong>
           <p>
-            {kasusAI
-              ? `${kasusAI.wawancaraTersangka.find((item) => item.id === kasusAI.solusiRahasia.pelakuId)?.nama || "Pelaku"} adalah pelaku dalam skenario ${kasusAI.id}. Motif dan kronologi resmi telah ditetapkan sejak kasus dibuat.`
-              : "Arthur Wells adalah pelaku dalam skenario fiktif MM-001. Jadwal pelayanan dan cangkir teh menjadi petunjuk penting untuk mengungkap kesempatan dan cara kejadian."}
+            {gagal
+              ? `Kamu menetapkan ${hasilPercobaan?.tuduhan || progres.tuduhan || "tersangka pilihanmu"} sebagai pelaku, tetapi kesimpulan itu salah. Seluruh progres percobaan ini sudah dihapus agar penyelidikan berikutnya dimulai dari nol.`
+              : kasusAI
+                ? `${kasusAI.wawancaraTersangka.find((item) => item.id === kasusAI.solusiRahasia.pelakuId)?.nama || "Pelaku"} adalah pelaku dalam skenario ${kasusAI.id}. Motif dan kronologi resmi telah ditetapkan sejak kasus dibuat.`
+                : "Arthur Wells adalah pelaku dalam skenario fiktif MM-001. Jadwal pelayanan dan cangkir teh menjadi petunjuk penting untuk mengungkap kesempatan dan cara kejadian."}
           </p>
         </div>
       </section>
@@ -139,10 +157,15 @@ export default function HasilAkhir({ kembali, mainLagi, kasusAI = null }) {
       <div className="hasil-aksi">
         <div>
           <span className="label-panel">LANGKAH SELANJUTNYA</span>
-          <h2>Siap menguji kembali deduksimu?</h2>
+          <h2>
+            {gagal
+              ? "Coba pecahkan kasus ini dari awal."
+              : "Siap menguji kembali deduksimu?"}
+          </h2>
           <p>
-            Mulai ulang untuk menyelidiki kasus ini dari awal dan mencoba
-            strategi berbeda.
+            {gagal
+              ? "Keputusan akhir tidak dapat diubah. Mulai ulang untuk menyelidiki kasus ini dari nol."
+              : "Mulai ulang untuk menyelidiki kasus ini dari awal dan mencoba strategi berbeda."}
           </p>
         </div>
         <button className="tombol tombol-emas" onClick={mainLagi}>

@@ -2351,6 +2351,10 @@ a:focus-visible {
   gap: 10px;
 }
 
+.aksi-detail-kasus .tombol {
+  width: 60%;
+}
+
 .tombol-lihat-hasil {
   margin-top: 14px;
 }
@@ -3599,6 +3603,17 @@ a:focus-visible {
     rgba(190, 155, 91, 0.09),
     rgba(20, 19, 17, 0.92) 48%
   );
+}
+.bagian-kasus .ai-generator-promo {
+  width: 100%;
+  margin: 0 0 30px;
+}
+.kartu-kasus-ai {
+  margin-top: 18px;
+}
+.hasil-status-gagal {
+  color: #d58b7e !important;
+  border-color: rgba(200, 90, 70, 0.4) !important;
 }
 .ai-promo-icon {
   display: grid;

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Search,
   FileText,
@@ -11,12 +12,48 @@ import {
   UserRound,
   Sparkles,
 } from "lucide-react";
-import { kasus, bacaProgresTersimpan } from "../data/caseData.js";
+import {
+  kasus,
+  bacaProgresTersimpan,
+  KUNCI_PROGRES,
+} from "../data/caseData.js";
 import IlustrasiKasus from "./IlustrasiKasus.jsx";
 import Logo from "./Logo";
 
-export default function Beranda({ bukaKasus, bukaGenerator }) {
-  const kasusSelesai = bacaProgresTersimpan().hasilTuduhan === "benar";
+const KUNCI_ARSIP_AI = "temukantersangka-arsip-ai-v1";
+
+function bacaArsipAI() {
+  try {
+    const data = JSON.parse(
+      window.localStorage.getItem(KUNCI_ARSIP_AI) || "[]",
+    );
+    return Array.isArray(data)
+      ? data.filter((item) => item?.id && item?.kasus)
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function statusKasusAI(item) {
+  return (
+    bacaProgresTersimpan(`temukantersangka-progres-${item.id}`).hasilTuduhan ===
+    "benar"
+  );
+}
+
+export default function Beranda({ bukaKasus, bukaGenerator, mainkanKasusAI }) {
+  const [arsipAI] = useState(bacaArsipAI);
+  const kasusSelesai =
+    bacaProgresTersimpan(KUNCI_PROGRES).hasilTuduhan === "benar";
+  const jumlahKasus = 1 + arsipAI.length;
+  const jumlahTersangka =
+    kasus.tersangka.length +
+    arsipAI.reduce(
+      (total, item) =>
+        total + (item.kasus?.tersangka?.length || item.tersangka?.length || 0),
+      0,
+    );
 
   return (
     <>
@@ -48,18 +85,18 @@ export default function Beranda({ bukaKasus, bukaGenerator }) {
           </div>
           <div className="hero-statistik">
             <div>
-              <strong>01</strong>
+              <strong>{String(jumlahKasus).padStart(2, "0")}</strong>
               <span>Kasus tersedia</span>
             </div>
             <span className="statistik-pemisah" />
             <div>
-              <strong>03</strong>
+              <strong>{String(jumlahTersangka).padStart(2, "0")}</strong>
               <span>Calon tersangka</span>
             </div>
             <span className="statistik-pemisah" />
             <div>
-              <strong>∞</strong>
-              <span>Pertanyaan untuk digali</span>
+              <strong>{String(arsipAI.length).padStart(2, "0")}</strong>
+              <span>Kasus buatan AI</span>
             </div>
           </div>
         </div>
@@ -68,24 +105,6 @@ export default function Beranda({ bukaKasus, bukaGenerator }) {
           <span>TT / 001</span>
           <span>ARSIP INVESTIGASI</span>
         </div>
-      </section>
-
-      <section className="ai-generator-promo">
-        <div className="ai-promo-icon">
-          <Sparkles size={24} />
-        </div>
-        <div>
-          <span className="label-panel">UNIT KASUS DINAMIS</span>
-          <h2>Misteri baru, setiap kali bermain.</h2>
-          <p>
-            Buat skenario investigasi dengan AI, pilih tema sendiri atau biarkan
-            Gemini menentukan misterinya, lalu simpan di arsip pribadi.
-          </p>
-        </div>
-        <button className="tombol tombol-emas" onClick={bukaGenerator}>
-          <Sparkles size={16} /> Buka AI Case Generator{" "}
-          <ArrowUpRight size={16} />
-        </button>
       </section>
 
       <section className="bagian-kasus" id="kasus">
@@ -100,8 +119,29 @@ export default function Beranda({ bukaKasus, bukaGenerator }) {
             </h2>
             <p>Pilih berkas kasus dan mulailah mencari kebenaran.</p>
           </div>
-          <span className="arsip-hitung">ARSIP AKTIF / 001</span>
+          <span className="arsip-hitung">
+            ARSIP AKTIF / {String(jumlahKasus).padStart(3, "0")}
+          </span>
         </div>
+
+        <section className="ai-generator-promo">
+          <div className="ai-promo-icon">
+            <Sparkles size={24} />
+          </div>
+          <div>
+            <span className="label-panel">UNIT KASUS DINAMIS</span>
+            <h2>Misteri baru, setiap kali bermain.</h2>
+            <p>
+              Buat skenario investigasi dengan AI, pilih tema sendiri atau
+              biarkan Gemini menentukan misterinya, lalu simpan di arsip
+              pribadi.
+            </p>
+          </div>
+          <button className="tombol tombol-emas" onClick={bukaGenerator}>
+            <Sparkles size={16} /> Buka AI Case Generator{" "}
+            <ArrowUpRight size={16} />
+          </button>
+        </section>
 
         <article className="kartu-kasus">
           <div className="kartu-nomor">
@@ -155,10 +195,76 @@ export default function Beranda({ bukaKasus, bukaGenerator }) {
             <ArrowUpRight size={23} />
           </button>
         </article>
+        {arsipAI.map((item) => {
+          const selesai = statusKasusAI(item);
+          const dataKasus = item.kasus;
+          const jumlahTersangkaAI =
+            dataKasus.tersangka?.length || item.tersangka?.length || 0;
+          return (
+            <article className="kartu-kasus kartu-kasus-ai" key={item.id}>
+              <div className="kartu-nomor">
+                <span>BERKAS AI</span>
+                <strong>{item.id}</strong>
+                <div
+                  className={`kartu-cap ${selesai ? "kartu-cap-selesai" : ""}`}
+                >
+                  {selesai ? (
+                    <>
+                      BERHASIL
+                      <br />
+                      TERPECAHKAN
+                    </>
+                  ) : (
+                    <>
+                      BELUM
+                      <br />
+                      TERPECAHKAN
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className="kartu-isi">
+                <div className="kartu-label">
+                  <span
+                    className={
+                      selesai ? "status-selesai-arsip" : "status-merah"
+                    }
+                  >
+                    <span /> {selesai ? "KASUS TERPECAHKAN" : "KASUS TERBUKA"}
+                  </span>
+                  <span className="tingkat-kesulitan">
+                    {dataKasus.kesulitan || "AI"}
+                  </span>
+                </div>
+                <h3>{dataKasus.judul}</h3>
+                <p>{dataKasus.deskripsi}</p>
+                <div className="metadata-kasus">
+                  <span>
+                    <MapPin size={14} /> {dataKasus.lokasi}
+                  </span>
+                  <span>
+                    <Clock3 size={14} /> {dataKasus.waktu}
+                  </span>
+                  <span>
+                    <UserRound size={14} /> {jumlahTersangkaAI} tersangka
+                  </span>
+                </div>
+              </div>
+              <button
+                className="kartu-panah"
+                onClick={() => mainkanKasusAI(item)}
+                aria-label={`Mainkan ${dataKasus.judul}`}
+              >
+                <ArrowUpRight size={23} />
+              </button>
+            </article>
+          );
+        })}
         <div className="catatan-arsip">
           <LockKeyhole size={14} />
           <span>
-            Kasus tambahan akan tersedia seiring pengembangan unit investigasi.
+            Kasus bawaan dan semua kasus dari Arsip Pribadi ditampilkan di sini.
+            Arsip AI tersimpan pada browser ini.
           </span>
         </div>
       </section>
