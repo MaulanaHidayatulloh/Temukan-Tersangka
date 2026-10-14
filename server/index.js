@@ -297,24 +297,104 @@ function normalisasiKasusAI(raw, mode, tema, kesulitan, jumlahTersangka) {
     return v.trim().slice(0, max);
   };
   const colors = ["merah", "emas", "abu", "biru", "hijau"];
-  const tersangka = suspects.map((x, i) => ({
-    id: x.id,
-    nama: text(x.nama, 100),
-    peran: text(x.peran, 100),
-    inisial: text(
-      x.inisial ||
-        String(x.nama || "TT")
-          .slice(0, 2)
-          .toUpperCase(),
-      4,
-    ),
-    foto: `https://randomuser.me/api/portraits/lego/${i + 1}.jpg`,
-    warna: colors[i % colors.length],
-    deskripsi: text(x.deskripsi, 500),
-    alibi: text(x.alibi, 500),
-    pernyataan: text(x.pernyataan, 700),
-    catatan: text(x.catatan, 700),
-  }));
+  const tentukanGender = (x) => {
+    const eksplisit = String(x?.jenisKelamin || x?.gender || x?.kelamin || "")
+      .toLowerCase()
+      .trim();
+    if (
+      [
+        "perempuan",
+        "wanita",
+        "female",
+        "women",
+        "woman",
+        "cewek",
+        "putri",
+      ].includes(eksplisit)
+    )
+      return "perempuan";
+    if (
+      [
+        "laki-laki",
+        "laki laki",
+        "pria",
+        "male",
+        "men",
+        "man",
+        "cowok",
+        "putra",
+      ].includes(eksplisit)
+    )
+      return "laki-laki";
+    const konteks = [
+      x?.nama,
+      x?.peran,
+      x?.deskripsi,
+      x?.alibi,
+      x?.pernyataan,
+      x?.catatan,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    if (
+      /\b(perempuan|wanita|ibu|nyonya|nona|mbak|saudari|putri|istri|janda|\bshe\b|\bher\b|female|woman)\b/.test(
+        konteks,
+      )
+    )
+      return "perempuan";
+    if (
+      /\b(laki-laki|pria|bapak|pak|mas|saudara|putra|suami|duda|\bhe\b|\bhim\b|male|man)\b/.test(
+        konteks,
+      )
+    )
+      return "laki-laki";
+    const nama = String(x?.nama || "")
+      .toLowerCase()
+      .trim();
+    if (
+      /^(siti|dewi|putri|ayu|indah|ratna|lestari|fitri|nurul|melati|kartika|rina|nina|sarah|amelia|anisa|annisa|maya|citra|wulan|tiara|intan|bella|nadia|aisyah|farah|linda|susanti|yuni|mega|rani|dian)\b/.test(
+        nama,
+      )
+    )
+      return "perempuan";
+    if (
+      /^(budi|andi|agus|dedi|joko|bambang|rizky|rizki|arif|fajar|rahmat|yusuf|ahmad|adi|eko|dimas|putra|surya|irfan|reza|bayu|wahyu|tono|hendra|ferdi|ferry|doni|rudi|ilham|galih|bagas|rio|yoga|aldi|ivan)\b/.test(
+        nama,
+      )
+    )
+      return "laki-laki";
+    return "laki-laki";
+  };
+  const nomorFoto = (nama) => {
+    let hash = 0;
+    for (const char of String(nama || "TT"))
+      hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+    return (hash % 99) + 1;
+  };
+  const tersangka = suspects.map((x, i) => {
+    const jenisKelamin = tentukanGender(x);
+    const nama = text(x.nama, 100);
+    return {
+      id: x.id,
+      nama,
+      peran: text(x.peran, 100),
+      jenisKelamin,
+      inisial: text(
+        x.inisial ||
+          String(x.nama || "TT")
+            .slice(0, 2)
+            .toUpperCase(),
+        4,
+      ),
+      foto: `https://randomuser.me/api/portraits/${jenisKelamin === "perempuan" ? "women" : "men"}/${nomorFoto(nama)}.jpg`,
+      warna: colors[i % colors.length],
+      deskripsi: text(x.deskripsi, 500),
+      alibi: text(x.alibi, 500),
+      pernyataan: text(x.pernyataan, 700),
+      catatan: text(x.catatan, 700),
+    };
+  });
   const barangBukti = evidence.map((x) => ({
     id: x.id,
     nama: text(x.nama, 120),
@@ -720,7 +800,7 @@ const server = http.createServer(async (req, res) => {
           : 3;
       const prompt = `Buat satu kasus misteri fiktif interaktif berbahasa Indonesia untuk game TemukanTersangka. Mode: ${mode === "random" ? "acak sepenuhnya" : "kustom"}. Tema: ${tema}. Kesulitan: ${kesulitan}. Jumlah tersangka tepat ${jumlahTersangka}.
 
-Aturan: tentukan satu pelaku resmi terlebih dahulu; kronologi, motif, alibi, bukti, dan jawaban interogasi harus konsisten. Deskripsi publik tidak boleh membocorkan pelaku. Tersangka tak bersalah juga harus masuk akal untuk dicurigai. Semua karakter dan lokasi fiktif. Sertakan 4–8 bukti. Setiap tersangka memiliki 2 pertanyaan dan jawaban awal yang sesuai pengetahuan karakter. Gunakan ID tersangka S-01, S-02, dst. ID bukti B-01, B-02, dst. Jawaban hanya JSON tanpa Markdown dengan struktur: {"kasus":{"judul":"","tema":"","lokasi":"","waktu":"","kesulitan":"${kesulitan}","deskripsi":"","tujuan":""},"tersangka":[{"id":"S-01","nama":"","peran":"","inisial":"","deskripsi":"","alibi":"","pernyataan":"","catatan":""}],"barangBukti":[{"id":"B-01","nama":"","kategori":"","lokasi":"","ikon":"▤","ringkasan":"","detail":"","petunjuk":""}],"pertanyaanInterogasi":[[{"id":"q-1","pertanyaan":"","jawaban":"","catatan":""},{"id":"q-2","pertanyaan":"","jawaban":"","catatan":""}]],"hubunganBukti":{},"solusiRahasia":{"pelakuId":"S-02","motif":"","kronologi":"","buktiPenentu":["B-01"]}}. Isi semua field. Buat hubunganBukti dengan key format "B-01|B-02" bila ada hubungan yang masuk akal.`;
+Aturan: tentukan satu pelaku resmi terlebih dahulu; kronologi, motif, alibi, bukti, dan jawaban interogasi harus konsisten. Untuk setiap tersangka, isi field jenisKelamin secara eksplisit dengan nilai tepat "laki-laki" atau "perempuan", konsisten dengan nama dan cerita karakter tersebut. Deskripsi publik tidak boleh membocorkan pelaku. Tersangka tak bersalah juga harus masuk akal untuk dicurigai. Semua karakter dan lokasi fiktif. Sertakan 4–8 bukti. Setiap tersangka memiliki 2 pertanyaan dan jawaban awal yang sesuai pengetahuan karakter. Gunakan ID tersangka S-01, S-02, dst. ID bukti B-01, B-02, dst. Jawaban hanya JSON tanpa Markdown dengan struktur: {"kasus":{"judul":"","tema":"","lokasi":"","waktu":"","kesulitan":"${kesulitan}","deskripsi":"","tujuan":""},"tersangka":[{"id":"S-01","nama":"","jenisKelamin":"perempuan","peran":"","inisial":"","deskripsi":"","alibi":"","pernyataan":"","catatan":""}],"barangBukti":[{"id":"B-01","nama":"","kategori":"","lokasi":"","ikon":"▤","ringkasan":"","detail":"","petunjuk":""}],"pertanyaanInterogasi":[[{"id":"q-1","pertanyaan":"","jawaban":"","catatan":""},{"id":"q-2","pertanyaan":"","jawaban":"","catatan":""}]],"hubunganBukti":{},"solusiRahasia":{"pelakuId":"S-02","motif":"","kronologi":"","buktiPenentu":["B-01"]}}. Isi semua field. Buat hubunganBukti dengan key format "B-01|B-02" bila ada hubungan yang masuk akal.`;
       const result = await callGemini({
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         generationConfig: {

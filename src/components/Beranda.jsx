@@ -22,14 +22,124 @@ import Logo from "./Logo";
 
 const KUNCI_ARSIP_AI = "temukantersangka-arsip-ai-v1";
 
+function jenisKelaminTersangka(orang = {}) {
+  const eksplisit = String(
+    orang.jenisKelamin || orang.gender || orang.kelamin || "",
+  )
+    .toLowerCase()
+    .trim();
+  if (
+    [
+      "perempuan",
+      "wanita",
+      "female",
+      "women",
+      "woman",
+      "cewek",
+      "putri",
+    ].includes(eksplisit)
+  )
+    return "perempuan";
+  if (
+    [
+      "laki-laki",
+      "laki laki",
+      "pria",
+      "male",
+      "men",
+      "man",
+      "cowok",
+      "putra",
+    ].includes(eksplisit)
+  )
+    return "laki-laki";
+  const konteks = [
+    orang.nama,
+    orang.peran,
+    orang.deskripsi,
+    orang.alibi,
+    orang.pernyataan,
+    orang.catatan,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  if (
+    /\b(perempuan|wanita|ibu|nyonya|nona|mbak|saudari|putri|istri|janda|she|her|female|woman)\b/.test(
+      konteks,
+    )
+  )
+    return "perempuan";
+  if (
+    /\b(laki-laki|pria|bapak|pak|mas|saudara|putra|suami|duda|he|him|male|man)\b/.test(
+      konteks,
+    )
+  )
+    return "laki-laki";
+  const nama = String(orang.nama || "")
+    .toLowerCase()
+    .trim();
+  if (
+    /^(siti|dewi|putri|ayu|indah|ratna|lestari|fitri|nurul|melati|kartika|rina|nina|sarah|amelia|anisa|annisa|maya|citra|wulan|tiara|intan|bella|nadia|aisyah|farah|linda|susanti|yuni|mega|rani|dian)\b/.test(
+      nama,
+    )
+  )
+    return "perempuan";
+  if (
+    /^(budi|andi|agus|dedi|joko|bambang|rizky|rizki|arif|fajar|rahmat|yusuf|ahmad|adi|eko|dimas|putra|surya|irfan|reza|bayu|wahyu|tono|hendra|ferdi|ferry|doni|rudi|ilham|galih|bagas|rio|yoga|aldi|ivan)\b/.test(
+      nama,
+    )
+  )
+    return "laki-laki";
+  return "laki-laki";
+}
+
+function nomorFoto(nama = "TT") {
+  let hash = 0;
+  for (const char of String(nama))
+    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return (hash % 99) + 1;
+}
+
+function migrasikanFotoKasus(item) {
+  const daftar = item?.kasus?.tersangka ?? item?.tersangka ?? [];
+  if (!Array.isArray(daftar)) return item;
+  const tersangka = daftar.map((orang) => {
+    const gender = jenisKelaminTersangka(orang);
+    return {
+      ...orang,
+      jenisKelamin: gender,
+      foto: `https://randomuser.me/api/portraits/${gender === "perempuan" ? "women" : "men"}/${nomorFoto(orang.nama)}.jpg`,
+    };
+  });
+  const wawancaraTersangka = Array.isArray(item.wawancaraTersangka)
+    ? item.wawancaraTersangka.map(
+        (orang) => tersangka.find((x) => x.id === orang.id) || orang,
+      )
+    : tersangka;
+  return {
+    ...item,
+    tersangka,
+    wawancaraTersangka,
+    kasus: item.kasus ? { ...item.kasus, tersangka } : item.kasus,
+  };
+}
+
 function bacaArsipAI() {
   try {
     const data = JSON.parse(
       window.localStorage.getItem(KUNCI_ARSIP_AI) || "[]",
     );
-    return Array.isArray(data)
-      ? data.filter((item) => item?.id && item?.kasus)
-      : [];
+    if (!Array.isArray(data)) return [];
+    const diperbarui = data
+      .filter((item) => item?.id && item?.kasus)
+      .map(migrasikanFotoKasus);
+    try {
+      window.localStorage.setItem(KUNCI_ARSIP_AI, JSON.stringify(diperbarui));
+    } catch {
+      /* Arsip tetap bisa dipakai jika penyimpanan browser menolak penulisan. */
+    }
+    return diperbarui;
   } catch {
     return [];
   }

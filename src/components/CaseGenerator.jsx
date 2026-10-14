@@ -26,10 +26,127 @@ const THEMES = [
   "Misteri Benda Hilang",
 ];
 
+function tentukanGenderTersangka(orang = {}) {
+  const eksplisit = String(
+    orang.jenisKelamin || orang.gender || orang.kelamin || "",
+  )
+    .toLowerCase()
+    .trim();
+  if (
+    [
+      "perempuan",
+      "wanita",
+      "female",
+      "women",
+      "woman",
+      "cewek",
+      "putri",
+    ].includes(eksplisit)
+  )
+    return "perempuan";
+  if (
+    [
+      "laki-laki",
+      "laki laki",
+      "pria",
+      "male",
+      "men",
+      "man",
+      "cowok",
+      "putra",
+    ].includes(eksplisit)
+  )
+    return "laki-laki";
+  const konteks = [
+    orang.nama,
+    orang.peran,
+    orang.deskripsi,
+    orang.alibi,
+    orang.pernyataan,
+    orang.catatan,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  if (
+    /\b(perempuan|wanita|ibu|nyonya|nona|mbak|saudari|putri|istri|janda|she|her|female|woman)\b/.test(
+      konteks,
+    )
+  )
+    return "perempuan";
+  if (
+    /\b(laki-laki|pria|bapak|pak|mas|saudara|putra|suami|duda|he|him|male|man)\b/.test(
+      konteks,
+    )
+  )
+    return "laki-laki";
+  const nama = String(orang.nama || "")
+    .toLowerCase()
+    .trim();
+  if (
+    /^(siti|dewi|putri|ayu|indah|ratna|lestari|fitri|nurul|melati|kartika|rina|nina|sarah|amelia|anisa|annisa|maya|citra|wulan|tiara|intan|bella|nadia|aisyah|farah|linda|susanti|yuni|mega|rani|dian)\b/.test(
+      nama,
+    )
+  )
+    return "perempuan";
+  if (
+    /^(budi|andi|agus|dedi|joko|bambang|rizky|rizki|arif|fajar|rahmat|yusuf|ahmad|adi|eko|dimas|putra|surya|irfan|reza|bayu|wahyu|tono|hendra|ferdi|ferry|doni|rudi|ilham|galih|bagas|rio|yoga|aldi|ivan)\b/.test(
+      nama,
+    )
+  )
+    return "laki-laki";
+  return "laki-laki";
+}
+
+function nomorFoto(nama = "TT") {
+  let hash = 0;
+  for (const char of String(nama))
+    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return (hash % 99) + 1;
+}
+
+function perbaruiFotoTersangka(item) {
+  if (!item || typeof item !== "object") return item;
+  const daftar = item.kasus?.tersangka ?? item.tersangka ?? [];
+  if (!Array.isArray(daftar)) return item;
+  const tersangka = daftar.map((orang) => {
+    const jenisKelamin = tentukanGenderTersangka(orang);
+    return {
+      ...orang,
+      jenisKelamin,
+      foto: `https://randomuser.me/api/portraits/${jenisKelamin === "perempuan" ? "women" : "men"}/${nomorFoto(orang.nama)}.jpg`,
+    };
+  });
+  const hasil = {
+    ...item,
+    tersangka,
+    wawancaraTersangka: Array.isArray(item.wawancaraTersangka)
+      ? item.wawancaraTersangka.map(
+          (orang) =>
+            tersangka.find((x) => x.id === orang.id) || {
+              ...orang,
+              jenisKelamin: tentukanGenderTersangka(orang),
+              foto: `https://randomuser.me/api/portraits/${tentukanGenderTersangka(orang) === "perempuan" ? "women" : "men"}/${nomorFoto(orang.nama)}.jpg`,
+            },
+        )
+      : tersangka,
+  };
+  if (item.kasus) hasil.kasus = { ...item.kasus, tersangka };
+  return hasil;
+}
+
 function readArchive() {
   try {
     const data = JSON.parse(localStorage.getItem(KEY) || "[]");
-    return Array.isArray(data) ? data : [];
+    if (!Array.isArray(data)) return [];
+    const diperbarui = data.map(perbaruiFotoTersangka);
+    // Migrasi arsip lama yang masih memakai foto LEGO tanpa menghapus kasus/progres.
+    try {
+      localStorage.setItem(KEY, JSON.stringify(diperbarui));
+    } catch {
+      /* Arsip tetap bisa ditampilkan jika browser menolak penulisan. */
+    }
+    return diperbarui;
   } catch {
     return [];
   }
@@ -72,7 +189,7 @@ export default function CaseGenerator({ kembali, mainkan }) {
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.kasus)
         throw new Error(data.error || "Kasus belum berhasil dibuat.");
-      const generated = data.kasus;
+      const generated = perbaruiFotoTersangka(data.kasus);
       simpanArsip([
         generated,
         ...arsip.filter((item) => item.id !== generated.id),
