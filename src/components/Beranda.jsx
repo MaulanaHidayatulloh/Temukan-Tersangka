@@ -243,8 +243,7 @@ export default function Beranda({ bukaKasus, bukaGenerator, mainkanKasusAI }) {
             <h2>Misteri baru, setiap kali bermain.</h2>
             <p>
               Buat skenario investigasi dengan AI, pilih tema sendiri atau
-              biarkan Gemini menentukan misterinya, lalu simpan di arsip
-              pribadi.
+              biarkan AI menentukan misterinya, lalu simpan di arsip pribadi.
             </p>
           </div>
           <button className="tombol tombol-emas" onClick={bukaGenerator}>
@@ -253,123 +252,126 @@ export default function Beranda({ bukaKasus, bukaGenerator, mainkanKasusAI }) {
           </button>
         </section>
 
-        <article className="kartu-kasus">
-          <div className="kartu-nomor">
-            <span>BERKAS NO.</span>
-            <strong>MM—001</strong>
-            <div
-              className={`kartu-cap ${kasusSelesai ? "kartu-cap-selesai" : ""}`}
-            >
-              {kasusSelesai ? (
-                <>
-                  BERHASIL
-                  <br />
-                  TERPECAHKAN
-                </>
-              ) : (
-                <>
-                  BELUM
-                  <br />
-                  TERPECAHKAN
-                </>
-              )}
-            </div>
-          </div>
-          <div className="kartu-isi">
-            <div className="kartu-label">
-              <span
-                className={
-                  kasusSelesai ? "status-selesai-arsip" : "status-merah"
-                }
+        <div className="arsip-kasus-list" aria-label="Daftar kartu kasus">
+          <article className="kartu-kasus">
+            <div className="kartu-nomor">
+              <span>BERKAS NO.</span>
+              <strong>MM—001</strong>
+              <div
+                className={`kartu-cap ${kasusSelesai ? "kartu-cap-selesai" : ""}`}
               >
-                <span /> {kasusSelesai ? "KASUS TERPECAHKAN" : "KASUS TERBUKA"}
-              </span>
-              <span className="tingkat-kesulitan">MENENGAH</span>
+                {kasusSelesai ? (
+                  <>
+                    BERHASIL
+                    <br />
+                    TERPECAHKAN
+                  </>
+                ) : (
+                  <>
+                    BELUM
+                    <br />
+                    TERPECAHKAN
+                  </>
+                )}
+              </div>
             </div>
-            <h3>{kasus.judul}</h3>
-            <p>{kasus.deskripsi}</p>
-            <div className="metadata-kasus">
-              <span>
-                <MapPin size={14} /> {kasus.lokasi}
-              </span>
-              <span>
-                <Clock3 size={14} /> {kasus.waktu}
-              </span>
-            </div>
-          </div>
-          <button
-            className="kartu-panah"
-            onClick={bukaKasus}
-            aria-label="Buka kasus"
-          >
-            <ArrowUpRight size={23} />
-          </button>
-        </article>
-        {arsipAI.map((item) => {
-          const selesai = statusKasusAI(item);
-          const dataKasus = item.kasus;
-          const jumlahTersangkaAI =
-            dataKasus.tersangka?.length || item.tersangka?.length || 0;
-          return (
-            <article className="kartu-kasus kartu-kasus-ai" key={item.id}>
-              <div className="kartu-nomor">
-                <span>BERKAS AI</span>
-                <strong>{item.id}</strong>
-                <div
-                  className={`kartu-cap ${selesai ? "kartu-cap-selesai" : ""}`}
+            <div className="kartu-isi">
+              <div className="kartu-label">
+                <span
+                  className={
+                    kasusSelesai ? "status-selesai-arsip" : "status-merah"
+                  }
                 >
-                  {selesai ? (
-                    <>
-                      BERHASIL
-                      <br />
-                      TERPECAHKAN
-                    </>
-                  ) : (
-                    <>
-                      BELUM
-                      <br />
-                      TERPECAHKAN
-                    </>
-                  )}
-                </div>
+                  <span />{" "}
+                  {kasusSelesai ? "KASUS TERPECAHKAN" : "KASUS TERBUKA"}
+                </span>
+                <span className="tingkat-kesulitan">MENENGAH</span>
               </div>
-              <div className="kartu-isi">
-                <div className="kartu-label">
-                  <span
-                    className={
-                      selesai ? "status-selesai-arsip" : "status-merah"
-                    }
+              <h3>{kasus.judul}</h3>
+              <p>{kasus.deskripsi}</p>
+              <div className="metadata-kasus">
+                <span>
+                  <MapPin size={14} /> {kasus.lokasi}
+                </span>
+                <span>
+                  <Clock3 size={14} /> {kasus.waktu}
+                </span>
+              </div>
+            </div>
+            <button
+              className="kartu-panah"
+              onClick={bukaKasus}
+              aria-label="Buka kasus"
+            >
+              <ArrowUpRight size={23} />
+            </button>
+          </article>
+          {arsipAI.map((item) => {
+            const selesai = statusKasusAI(item);
+            const dataKasus = item.kasus;
+            const jumlahTersangkaAI =
+              dataKasus.tersangka?.length || item.tersangka?.length || 0;
+            return (
+              <article className="kartu-kasus kartu-kasus-ai" key={item.id}>
+                <div className="kartu-nomor">
+                  <span>BERKAS NO.</span>
+                  <strong>{item.id}</strong>
+                  <div
+                    className={`kartu-cap ${selesai ? "kartu-cap-selesai" : ""}`}
                   >
-                    <span /> {selesai ? "KASUS TERPECAHKAN" : "KASUS TERBUKA"}
-                  </span>
-                  <span className="tingkat-kesulitan">
-                    {dataKasus.kesulitan || "AI"}
-                  </span>
+                    {selesai ? (
+                      <>
+                        BERHASIL
+                        <br />
+                        TERPECAHKAN
+                      </>
+                    ) : (
+                      <>
+                        BELUM
+                        <br />
+                        TERPECAHKAN
+                      </>
+                    )}
+                  </div>
                 </div>
-                <h3>{dataKasus.judul}</h3>
-                <p>{dataKasus.deskripsi}</p>
-                <div className="metadata-kasus">
-                  <span>
-                    <MapPin size={14} /> {dataKasus.lokasi}
-                  </span>
-                  <span>
-                    <Clock3 size={14} /> {dataKasus.waktu}
-                  </span>
-                  <span>
-                    <UserRound size={14} /> {jumlahTersangkaAI} tersangka
-                  </span>
+                <div className="kartu-isi">
+                  <div className="kartu-label">
+                    <span
+                      className={
+                        selesai ? "status-selesai-arsip" : "status-merah"
+                      }
+                    >
+                      <span /> {selesai ? "KASUS TERPECAHKAN" : "KASUS TERBUKA"}
+                    </span>
+                    <span className="tingkat-kesulitan">
+                      {dataKasus.kesulitan || "AI"}
+                    </span>
+                  </div>
+                  <h3>{dataKasus.judul}</h3>
+                  <p>{dataKasus.deskripsi}</p>
+                  <div className="metadata-kasus">
+                    <span>
+                      <MapPin size={14} /> {dataKasus.lokasi}
+                    </span>
+                    <span>
+                      <Clock3 size={14} /> {dataKasus.waktu}
+                    </span>
+                    <span>
+                      <UserRound size={14} /> {jumlahTersangkaAI} tersangka
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <button
-                className="kartu-panah"
-                onClick={() => mainkanKasusAI(item)}
-                aria-label={`Mainkan ${dataKasus.judul}`}
-              >
-                <ArrowUpRight size={23} />
-              </button>
-            </article>
-          );
-        })}
+                <button
+                  className="kartu-panah"
+                  onClick={() => mainkanKasusAI(item)}
+                  aria-label={`Mainkan ${dataKasus.judul}`}
+                >
+                  <ArrowUpRight size={23} />
+                </button>
+              </article>
+            );
+          })}
+        </div>
         <div className="catatan-arsip">
           <LockKeyhole size={14} />
           <span>
@@ -432,7 +434,7 @@ export default function Beranda({ bukaKasus, bukaGenerator, mainkanKasusAI }) {
       <footer className="footer">
         <Logo kecil />
         <span>SETIAP PETUNJUK PUNYA CERITA.</span>
-        <span>© 2026 Maulana Hidayatulloh</span>
+        <span>© 2026 TemukanTersangka</span>
       </footer>
     </>
   );

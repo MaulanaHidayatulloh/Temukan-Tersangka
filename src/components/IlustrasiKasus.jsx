@@ -21,7 +21,7 @@ export default function IlustrasiKasus() {
       </div>
       <div className="label-ilustrasi">
         <span className="titik-merah" />
-        TKP — BLACKWOOD MANOR
+        TKP
       </div>
       <div className="cap-rahasia">RAHASIA</div>
     </div>

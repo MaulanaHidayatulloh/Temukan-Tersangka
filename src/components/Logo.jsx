@@ -6,10 +6,11 @@ export default function Logo({ kecil = false }) {
       aria-label="TemukanTersangka — Beranda"
     >
       <span className="logo-simbol">
-        <span className="logo-sudut logo-sudut-atas" />
-        <span className="logo-monogram">TT</span>
-        <span className="logo-sudut logo-sudut-bawah" />
-        <span className="logo-titik" />
+        <img
+          src="../public/icon_TemukanTersangka.svg"
+          alt=""
+          aria-hidden="true"
+        />
       </span>
 
       <span className="logo-teks">

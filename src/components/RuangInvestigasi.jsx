@@ -767,9 +767,8 @@ export default function RuangInvestigasi({ kembali, selesai, kasusAI = null }) {
                     <span>
                       <strong>INTEROGASI BEBAS DENGAN AI</strong>
                       <small>
-                        Tanyakan apa pun kepada tersangka ini. Jawaban dibuat
-                        Gemini berdasarkan skenario dan bukti yang sudah kamu
-                        temukan.
+                        Tanyakan apa pun kepada tersangka ini. Jawaban dibuat AI
+                        berdasarkan skenario dan bukti yang sudah kamu temukan.
                       </small>
                     </span>
                   </div>
@@ -800,8 +799,8 @@ export default function RuangInvestigasi({ kembali, selesai, kasusAI = null }) {
                     )}
                     {memuatAI && (
                       <div className="status-ai-memuat">
-                        <LoaderCircle size={15} className="ikon-berputar" />{" "}
-                        Gemini sedang menyusun jawaban...
+                        <LoaderCircle size={15} className="ikon-berputar" /> AI
+                        sedang menyusun jawaban...
                       </div>
                     )}
                   </div>
@@ -845,9 +844,8 @@ export default function RuangInvestigasi({ kembali, selesai, kasusAI = null }) {
                 <Sparkles size={24} />
               </div>
               <p className="teks-bantuan-jurnal">
-                Gunakan Gemini untuk menelaah bukti yang sudah kamu periksa. AI
-                akan membedakan fakta, dugaan, dan hal yang masih perlu
-                dibuktikan.
+                Gunakan AI untuk menelaah bukti yang sudah kamu periksa. AI akan
+                membedakan fakta, dugaan, dan hal yang masih perlu dibuktikan.
               </p>
               <div className="ringkasan-ai-konteks">
                 <strong>KONTEKS YANG DIKIRIM</strong>
@@ -871,7 +869,7 @@ export default function RuangInvestigasi({ kembali, selesai, kasusAI = null }) {
                   </>
                 ) : (
                   <>
-                    <Sparkles size={16} /> Analisis bukti dengan Gemini AI
+                    <Sparkles size={16} /> Analisis bukti dengan AI
                   </>
                 )}
               </button>
@@ -889,7 +887,7 @@ export default function RuangInvestigasi({ kembali, selesai, kasusAI = null }) {
                     onClick={() => {
                       setCatatan(
                         (sebelumnya) =>
-                          `${sebelumnya.trim()}${sebelumnya.trim() ? "\n\n" : ""}Laporan Gemini AI:\n${hasilAnalisisAI}`,
+                          `${sebelumnya.trim()}${sebelumnya.trim() ? "\n\n" : ""}Laporan AI:\n${hasilAnalisisAI}`,
                       );
                       setTab("jurnal");
                     }}
@@ -1063,11 +1061,11 @@ export default function RuangInvestigasi({ kembali, selesai, kasusAI = null }) {
                 {memuatAnalisisAI ? (
                   <>
                     <LoaderCircle size={16} className="ikon-berputar" />{" "}
-                    Menganalisis dengan Gemini...
+                    Menganalisis dengan AI...
                   </>
                 ) : (
                   <>
-                    <Sparkles size={16} /> Minta analisis Gemini AI
+                    <Sparkles size={16} /> Minta analisis AI
                   </>
                 )}
               </button>
@@ -1080,7 +1078,7 @@ export default function RuangInvestigasi({ kembali, selesai, kasusAI = null }) {
                     onClick={() => {
                       setCatatan(
                         (sebelumnya) =>
-                          `${sebelumnya.trim()}${sebelumnya.trim() ? "\n\n" : ""}Laporan Gemini AI:\n${hasilAnalisisAI}`,
+                          `${sebelumnya.trim()}${sebelumnya.trim() ? "\n\n" : ""}Laporan AI:\n${hasilAnalisisAI}`,
                       );
                       setTab("jurnal");
                     }}
@@ -1096,7 +1094,7 @@ export default function RuangInvestigasi({ kembali, selesai, kasusAI = null }) {
               )}
               <div className="catatan-demo">
                 Analisis aturan kasus tetap tersedia sebagai pembanding. Untuk
-                analisis dinamis, gunakan Gemini AI.
+                analisis dinamis, gunakan AI.
               </div>
             </div>
           )}
@@ -1261,8 +1259,8 @@ export default function RuangInvestigasi({ kembali, selesai, kasusAI = null }) {
                 </div>
               )}
               <p className="catatan-demo">
-                Interogasi bebas menggunakan Gemini AI. Jawaban AI bersifat
-                dinamis dan harus dicocokkan dengan bukti dalam skenario fiktif.
+                Interogasi bebas menggunakan AI. Jawaban AI bersifat dinamis dan
+                harus dicocokkan dengan bukti dalam skenario fiktif.
               </p>
             </div>
           )}

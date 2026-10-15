@@ -233,8 +233,8 @@ export default function CaseGenerator({ kembali, mainkan }) {
         Ciptakan <em>misteri baru.</em>
       </h1>
       <p className="detail-pembuka">
-        Gemini menyusun skenario, tersangka, alibi, dan barang bukti. Setiap
-        kasus yang valid disimpan di arsip agar bisa dimainkan kembali.
+        AI menyusun skenario, tersangka, alibi, dan barang bukti. Setiap kasus
+        yang valid disimpan di arsip agar bisa dimainkan kembali.
       </p>
 
       <section className="generator-panel panel-detail">
@@ -316,8 +316,8 @@ export default function CaseGenerator({ kembali, mainkan }) {
         </button>
         {memuat && (
           <p className="generator-note">
-            Gemini sedang menyusun kronologi dan memeriksa struktur kasus.
-            Proses ini bisa memerlukan beberapa saat.
+            AI sedang menyusun kronologi dan memeriksa struktur kasus. Proses
+            ini bisa memerlukan beberapa saat.
           </p>
         )}
         {error && <div className="generator-alert error">{error}</div>}

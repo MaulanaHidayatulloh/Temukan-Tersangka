@@ -39,7 +39,7 @@ function loadLocalEnv() {
 
 loadLocalEnv();
 
-// KONFIGURASI SERVER DAN GEMINI
+// KONFIGURASI SERVER DAN AI
 function hasUsableApiKey() {
   const key = (process.env.GEMINI_API_KEY || "").trim();
 
@@ -639,7 +639,7 @@ Buat analisis berdasarkan data ini.
   };
 }
 
-// MEMANGGIL GEMINI DENGAN RETRY DAN MODEL CADANGAN
+// MEMANGGIL AI DENGAN RETRY DAN MODEL CADANGAN
 async function callGemini(requestBody) {
   const models = [...new Set([MODEL, ...FALLBACK_MODELS])];
 
