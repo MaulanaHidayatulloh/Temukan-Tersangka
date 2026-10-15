@@ -39,7 +39,7 @@ function loadLocalEnv() {
 
 loadLocalEnv();
 
-// KONFIGURASI SERVER DAN AI
+// KONFIGURASI SERVER DAN GEMINI
 function hasUsableApiKey() {
   const key = (process.env.GEMINI_API_KEY || "").trim();
 
@@ -60,7 +60,7 @@ function hasUsableApiKey() {
   return !placeholders.some((placeholder) => normalized.includes(placeholder));
 }
 
-const PORT = Number(process.env.API_PORT || 3001);
+const PORT = Number(process.env.PORT || process.env.API_PORT || 3001);
 
 const MODEL = (process.env.GEMINI_MODEL || "gemini-3.8-flash").replace(
   /^models\//,
@@ -150,6 +150,27 @@ function sendJson(res, status, payload) {
 }
 
 function readJson(req) {
+  // Vercel Node.js Functions may provide an already-parsed body.
+  if (
+    req.body !== undefined &&
+    req.body !== null &&
+    typeof req.body === "object"
+  ) {
+    return Promise.resolve(req.body);
+  }
+
+  if (typeof req.body === "string") {
+    try {
+      return Promise.resolve(JSON.parse(req.body || "{}"));
+    } catch {
+      return Promise.reject(
+        Object.assign(new Error("Format permintaan tidak valid."), {
+          statusCode: 400,
+        }),
+      );
+    }
+  }
+
   return new Promise((resolve, reject) => {
     let size = 0;
     const chunks = [];
@@ -733,7 +754,7 @@ async function callGemini(requestBody) {
 }
 
 // SERVER HTTP
-const server = http.createServer(async (req, res) => {
+export async function handleRequest(req, res) {
   let url;
 
   try {
@@ -1013,22 +1034,25 @@ Aturan: tentukan satu pelaku resmi terlebih dahulu; kronologi, motif, alibi, buk
       error: "Terjadi kesalahan pada server AI.",
     });
   }
-});
+}
 
-// MENJALANKAN SERVER
-server.listen(PORT, () => {
-  console.log(
-    `Server TemukanTersangka AI berjalan di http://localhost:${PORT}`,
-  );
+// MENJALANKAN SERVER LOKAL (tidak dipakai oleh Vercel Functions)
+if (process.env.VERCEL !== "1") {
+  const server = http.createServer(handleRequest);
+  server.listen(PORT, () => {
+    console.log(
+      `Server TemukanTersangka AI berjalan di http://localhost:${PORT}`,
+    );
 
-  console.log(
-    `Gemini API key: ${
-      hasUsableApiKey()
-        ? "sudah terdeteksi"
-        : "belum diatur atau masih placeholder (.env)"
-    }`,
-  );
+    console.log(
+      `Gemini API key: ${
+        hasUsableApiKey()
+          ? "sudah terdeteksi"
+          : "belum diatur atau masih placeholder (.env)"
+      }`,
+    );
 
-  console.log(`Model utama: ${MODEL}`);
-  console.log(`Model cadangan: ${FALLBACK_MODELS.join(", ")}`);
-});
+    console.log(`Model utama: ${MODEL}`);
+    console.log(`Model cadangan: ${FALLBACK_MODELS.join(", ")}`);
+  });
+}
