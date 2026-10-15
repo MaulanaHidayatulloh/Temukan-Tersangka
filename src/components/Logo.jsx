@@ -7,8 +7,8 @@ export default function Logo({ kecil = false }) {
     >
       <span className="logo-simbol">
         <img
-          src="../../public/icon_TemukanTersangka.svg"
-          alt=""
+          src="/icon_TemukanTersangka.svg"
+          alt="Logo TemukanTersangka"
           aria-hidden="true"
         />
       </span>
