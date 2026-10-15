@@ -7,7 +7,7 @@ export default function Logo({ kecil = false }) {
     >
       <span className="logo-simbol">
         <img
-          src="../public/icon_TemukanTersangka.svg"
+          src="../../public/icon_TemukanTersangka.svg"
           alt=""
           aria-hidden="true"
         />

@@ -1,7 +1,13 @@
 {
   "framework": "vite",
   "functions": {
-    "api/[...path].js": {
+    "api/ai.js": {
+      "maxDuration": 60
+    },
+    "api/health.js": {
+      "maxDuration": 60
+    },
+    "api/cases/generate.js": {
       "maxDuration": 60
     }
   }
